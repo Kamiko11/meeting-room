@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบจองห้องประชุมสำหรับนิสิต | สำนักคอมพิวเตอร์ มศว</title>
+  <meta name="description" content="ระบบจองห้องประชุม สำนักคอมพิวเตอร์ มหาวิทยาลัยศรีนครินทรวิโรฒ องครักษ์">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FullCalendar -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <img src="img/swu-logo.png" alt="โลโก้ มศว" class="logo-img">
+      <div class="header-titles">
+        <h1>ระบบจองห้องประชุมสำหรับนิสิต</h1>
+        <p>สำนักคอมพิวเตอร์ มหาวิทยาลัยศรีนครินทรวิโรฒ องครักษ์</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="app-main">
+    <div class="layout-grid">
+      
+      <!-- Left Column: Calendar -->
+      <section class="calendar-section">
+        <div class="section-header">
+          <h2>📅 ปฏิทินการจอง</h2>
+          <p class="info-text">คลิกที่รายการจองเพื่อดูรายละเอียด</p>
+        </div>
+        <div class="card">
+          <div id="calendar"></div>
+        </div>
+      </section>
+
+      <!-- Right Column: Booking Form -->
+      <section class="booking-section">
+        <div class="section-header">
+          <h2>📝 จองห้องประชุม</h2>
+          <p class="service-hours">เวลาให้บริการ: 08:30 - 16:30 น. (จันทร์ - ศุกร์)</p>
+        </div>
+        <div class="card">
+          <form id="booking-form">
+            <div class="form-group">
+              <label for="full-name">ชื่อ-นามสกุล <span class="required">*</span></label>
+              <input type="text" id="full-name" required placeholder="เช่น นายสมชาย ใจดี">
+            </div>
+
+            <div class="form-group">
+              <label for="faculty">คณะ <span class="required">*</span></label>
+              <select id="faculty" required>
+                <option value="" disabled selected>-- เลือกคณะ --</option>
+                <option value="คณะศึกษาศาสตร์">คณะศึกษาศาสตร์</option>
+                <option value="คณะมนุษยศาสตร์">คณะมนุษยศาสตร์</option>
+                <option value="คณะวิทยาศาสตร์">คณะวิทยาศาสตร์</option>
+                <option value="คณะสังคมศาสตร์">คณะสังคมศาสตร์</option>
+                <option value="คณะพลศึกษา">คณะพลศึกษา</option>
+                <option value="คณะแพทยศาสตร์">คณะแพทยศาสตร์</option>
+                <option value="คณะทันตแพทยศาสตร์">คณะทันตแพทยศาสตร์</option>
+                <option value="คณะเภสัชศาสตร์">คณะเภสัชศาสตร์</option>
+                <option value="คณะพยาบาลศาสตร์">คณะพยาบาลศาสตร์</option>
+                <option value="คณะวิศวกรรมศาสตร์">คณะวิศวกรรมศาสตร์</option>
+                <option value="คณะศิลปกรรมศาสตร์">คณะศิลปกรรมศาสตร์</option>
+                <option value="คณะเทคโนโลยีและนวัตกรรมผลิตภัณฑ์การเกษตร">คณะเทคโนโลยีและนวัตกรรมผลิตภัณฑ์การเกษตร</option>
+                <option value="คณะกายภาพบำบัด">คณะกายภาพบำบัด</option>
+                <option value="คณะเศรษฐศาสตร์">คณะเศรษฐศาสตร์</option>
+                <option value="คณะธรรมนิติศาสตร์">คณะธรรมนิติศาสตร์</option>
+                <option value="วิทยาลัยนวัตกรรมสื่อสารสังคม">วิทยาลัยนวัตกรรมสื่อสารสังคม</option>
+                <option value="วิทยาลัยโพธิวิชชาลัย">วิทยาลัยโพธิวิชชาลัย</option>
+                <option value="วิทยาลัยอุตสาหกรรมสร้างสรรค์">วิทยาลัยอุตสาหกรรมสร้างสรรค์</option>
+                <option value="วิทยาลัยนานาชาติเพื่อศึกษาความยั่งยืน">วิทยาลัยนานาชาติเพื่อศึกษาความยั่งยืน</option>
+                <option value="สำนักวิชาเศรษฐศาสตร์และนโยบายสาธารณะ">สำนักวิชาเศรษฐศาสตร์และนโยบายสาธารณะ</option>
+                <option value="บัณฑิตวิทยาลัย">บัณฑิตวิทยาลัย</option>
+                <option value="อื่นๆ">อื่นๆ</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="booking-date">วันที่จอง <span class="required">*</span></label>
+              <input type="date" id="booking-date" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="start-time">เวลาเริ่มต้น <span class="required">*</span></label>
+                <input type="time" id="start-time" required min="08:30" max="16:00" step="1800">
+              </div>
+              <div class="form-group">
+                <label for="end-time">เวลาสิ้นสุด <span class="required">*</span></label>
+                <input type="time" id="end-time" required min="09:00" max="16:30" step="1800">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="purpose">วัตถุประสงค์ <span class="required">*</span></label>
+              <textarea id="purpose" required rows="3" placeholder="เช่น ประชุมกลุ่มวิชาโปรเจค"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary submit-btn">
+              <span class="icon">📅</span> จองห้องประชุม
+            </button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Modals -->
+  
+  <!-- 1. Detail Modal -->
+  <div id="detail-modal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <div class="modal-header">
+        <h3>รายละเอียดการจอง</h3>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row">
+          <span class="detail-label">ชื่อ-นามสกุล:</span>
+          <span class="detail-value" id="detail-name"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">คณะ:</span>
+          <span class="detail-value" id="detail-faculty"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">วันที่:</span>
+          <span class="detail-value" id="detail-date"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">เวลา:</span>
+          <span class="detail-value" id="detail-time"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">วัตถุประสงค์:</span>
+          <span class="detail-value" id="detail-purpose"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-booking" class="btn btn-danger">ยกเลิกการจอง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Success Modal -->
+  <div id="success-modal" class="modal">
+    <div class="modal-content success-content">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+      </div>
+      <div class="modal-header text-center">
+        <h3>จองสำเร็จ!</h3>
+      </div>
+      <div class="modal-body">
+        <div class="summary-box">
+          <div class="detail-row"><span class="detail-label">ชื่อ-นามสกุล:</span> <span id="success-name"></span></div>
+          <div class="detail-row"><span class="detail-label">คณะ:</span> <span id="success-faculty"></span></div>
+          <div class="detail-row"><span class="detail-label">วันที่:</span> <span id="success-date"></span></div>
+          <div class="detail-row"><span class="detail-label">เวลา:</span> <span id="success-time"></span></div>
+          <div class="detail-row"><span class="detail-label">วัตถุประสงค์:</span> <span id="success-purpose"></span></div>
+        </div>
+        
+        <div class="pin-container">
+          <div class="pin-warning">
+            <span class="icon">⚠️</span> กรุณาจดรหัส PIN นี้ไว้ สำหรับใช้ยกเลิกการจอง
+          </div>
+          <div id="success-pin" class="pin-display"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Cancel Modal -->
+  <div id="cancel-modal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <div class="modal-header">
+        <h3>ยกเลิกการจอง</h3>
+      </div>
+      <div class="modal-body">
+        <form id="cancel-form">
+          <div class="form-group">
+            <label for="cancel-pin">รหัส PIN 6 หลัก</label>
+            <input type="text" id="cancel-pin" required pattern="[0-9]{6}" maxlength="6" inputmode="numeric" autocomplete="off" placeholder="กรอก PIN 6 หลัก">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="btn-back-detail">กลับ</button>
+            <button type="submit" class="btn btn-danger" id="btn-confirm-cancel">ยืนยันยกเลิก</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>© 2567 สำนักคอมพิวเตอร์ มหาวิทยาลัยศรีนครินทรวิโรฒ</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js" defer></script>
+  <script src="js/calendar.js" defer></script>
+  <script src="js/booking.js" defer></script>
+</body>
+</html>

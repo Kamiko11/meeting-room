@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | ระบบจองห้องประชุม มศว</title>
+  <meta name="description" content="หน้าจัดการระบบจองห้องประชุม สำนักคอมพิวเตอร์ มศว">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header admin-header">
+    <div class="header-container">
+      <img src="img/swu-logo.png" alt="โลโก้ มศว" class="logo-img">
+      <div class="header-titles">
+        <h1>🛡️ Admin Dashboard</h1>
+        <p>ระบบจัดการห้องประชุม — สำนักคอมพิวเตอร์ มศว องครักษ์</p>
+      </div>
+      <div class="header-actions" id="header-actions" style="display:none;">
+        <a href="/" class="btn btn-back">← กลับหน้าหลัก</a>
+        <button class="btn btn-logout" id="btn-logout">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Login Screen -->
+  <main class="app-main" id="login-screen">
+    <div class="login-wrapper">
+      <div class="card login-card">
+        <div class="login-icon">🔐</div>
+        <h2>เข้าสู่ระบบผู้ดูแล</h2>
+        <p class="login-subtitle">กรอกรหัสผ่าน Admin เพื่อเข้าจัดการระบบ</p>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="admin-password">รหัสผ่าน</label>
+            <input type="password" id="admin-password" required placeholder="กรอกรหัสผ่าน Admin" autocomplete="off">
+          </div>
+          <button type="submit" class="btn btn-primary submit-btn" id="btn-login">
+            เข้าสู่ระบบ
+          </button>
+          <div class="login-error" id="login-error" style="display:none;"></div>
+        </form>
+        <a href="/" class="back-link">← กลับหน้าจองห้องประชุม</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Dashboard Screen (hidden until login) -->
+  <main class="app-main" id="dashboard-screen" style="display:none;">
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-number" id="stat-total">0</div>
+        <div class="stat-label">การจองทั้งหมด</div>
+      </div>
+      <div class="stat-card stat-active">
+        <div class="stat-number" id="stat-active">0</div>
+        <div class="stat-label">กำลังใช้งาน</div>
+      </div>
+      <div class="stat-card stat-cancelled">
+        <div class="stat-number" id="stat-cancelled">0</div>
+        <div class="stat-label">ยกเลิกแล้ว</div>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <h2>📋 รายการจองทั้งหมด</h2>
+      <div class="filter-controls">
+        <select id="filter-status">
+          <option value="all">ทุกสถานะ</option>
+          <option value="active">กำลังใช้งาน</option>
+          <option value="cancelled">ยกเลิกแล้ว</option>
+        </select>
+        <input type="text" id="filter-search" placeholder="🔍 ค้นหาชื่อ / คณะ...">
+        <button class="btn btn-refresh" id="btn-refresh">🔄 รีเฟรช</button>
+      </div>
+    </div>
+
+    <!-- Bookings Table -->
+    <div class="card table-card">
+      <div class="table-responsive">
+        <table id="bookings-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>ชื่อผู้จอง</th>
+              <th>คณะ</th>
+              <th>วันที่</th>
+              <th>เวลา</th>
+              <th>วัตถุประสงค์</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="bookings-tbody">
+            <tr>
+              <td colspan="8" class="empty-state">กำลังโหลดข้อมูล...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: Confirm Force Cancel -->
+  <div id="admin-cancel-modal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <div class="modal-header">
+        <h3>⚠️ ยืนยันการยกเลิก</h3>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-text">ต้องการยกเลิกการจองของ <strong id="cancel-target-name"></strong> หรือไม่?</p>
+        <p class="confirm-detail" id="cancel-target-detail"></p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-cancel-back">ยกเลิก</button>
+        <button class="btn btn-danger" id="btn-confirm-force-cancel">ยืนยันยกเลิกการจอง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: New PIN Display -->
+  <div id="admin-pin-modal" class="modal">
+    <div class="modal-content success-content">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+      </div>
+      <div class="modal-header text-center">
+        <h3>รีเซ็ต PIN สำเร็จ!</h3>
+      </div>
+      <div class="modal-body">
+        <p class="pin-owner">PIN ใหม่สำหรับ: <strong id="pin-target-name"></strong></p>
+        <div class="pin-container">
+          <div class="pin-warning">
+            <span class="icon">📋</span> กรุณาแจ้ง PIN ใหม่นี้ให้นิสิตเจ้าของการจองทราบ
+          </div>
+          <div id="admin-new-pin" class="pin-display"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>© 2567 สำนักคอมพิวเตอร์ มหาวิทยาลัยศรีนครินทรวิโรฒ</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js" defer></script>
+  <script src="js/admin.js" defer></script>
+</body>
+</html>
