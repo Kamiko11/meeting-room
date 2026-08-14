@@ -199,10 +199,10 @@ const Admin = {
 
       const actionBtns = isActive
         ? `<div class="action-btns">
-             <button class="btn-action btn-force-cancel" onclick="Admin.confirmForceCancel(${b.id}, '${this.escapeHtml(b.full_name)}', '${dateThai} ${timeRange}')">
+             <button class="btn-action btn-force-cancel" onclick="Admin.confirmForceCancel('${b.id}', '${this.escapeHtml(b.full_name)}', '${dateThai} ${timeRange}')">
                ยกเลิก
              </button>
-             <button class="btn-action btn-reset-pin" onclick="Admin.resetPin(${b.id}, '${this.escapeHtml(b.full_name)}')">
+             <button class="btn-action btn-reset-pin" onclick="Admin.resetPin('${b.id}', '${this.escapeHtml(b.full_name)}')">
                รีเซ็ต PIN
              </button>
            </div>`
