@@ -120,11 +120,8 @@ app.post('/api/bookings', async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'ต้องจองอย่างน้อย 30 นาที' });
         }
         
-        // 5. Maximum duration 4 hours (240 minutes)
-        if (duration > 240) {
-            return res.status(400).json({ success: false, message: 'จองได้สูงสุดไม่เกิน 4 ชั่วโมง' });
-        }
-        
+        // No maximum duration limit as long as it's within operating hours (checked above)
+
         // 6. Check overlap
         const overlaps = await Booking.find({
             status: 'active',
