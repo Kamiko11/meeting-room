@@ -1,37 +1,11 @@
 // Booking module - form submission and cancellation
 const BookingModule = {
-  currentBookingId: null,
-
   init() {
     const form = document.getElementById('booking-form');
     if (form) {
       form.addEventListener('submit', (e) => {
         e.preventDefault();
         this.submitBooking();
-      });
-    }
-
-    const btnCancel = document.getElementById('btn-cancel-booking');
-    if (btnCancel) {
-      btnCancel.addEventListener('click', () => {
-        App.closeModal('detail-modal');
-        App.openModal('cancel-modal');
-      });
-    }
-
-    const cancelForm = document.getElementById('cancel-form');
-    if (cancelForm) {
-      cancelForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.confirmCancel();
-      });
-    }
-
-    const btnBack = document.getElementById('btn-back-detail');
-    if (btnBack) {
-      btnBack.addEventListener('click', () => {
-        App.closeModal('cancel-modal');
-        App.openModal('detail-modal');
       });
     }
 
@@ -91,12 +65,12 @@ const BookingModule = {
       const result = await response.json();
 
       if (result.success) {
-        this.showSuccessModal(result.booking, result.cancelPin);
+        this.showSuccessModal(result.booking);
         form.reset();
         if (window.CalendarModule) {
           CalendarModule.refreshEvents();
         }
-        App.showToast('จองห้องประชุมสำเร็จ!', 'success');
+        App.showToast('ส่งคำขอจองสำเร็จ รอการอนุมัติ', 'success');
       } else {
         if (result.conflicts) {
           let conflictMsg = result.message + '\n\nรายการที่ชนกัน:';
@@ -118,62 +92,15 @@ const BookingModule = {
     }
   },
 
-  showSuccessModal(booking, pin) {
+  showSuccessModal(booking) {
     document.getElementById('success-name').textContent = booking.full_name || booking.fullName;
     document.getElementById('success-faculty').textContent = booking.faculty;
     document.getElementById('success-date').textContent = App.formatDateThai(booking.booking_date || booking.bookingDate);
     document.getElementById('success-time').textContent = 
       App.formatTime(booking.start_time || booking.startTime) + ' - ' + App.formatTime(booking.end_time || booking.endTime);
     document.getElementById('success-purpose').textContent = booking.purpose;
-    document.getElementById('success-pin').textContent = pin;
     
     App.openModal('success-modal');
-  },
-
-  async confirmCancel() {
-    const pinInput = document.getElementById('cancel-pin');
-    const pin = pinInput.value.trim();
-    const confirmBtn = document.getElementById('btn-confirm-cancel');
-
-    if (!pin || pin.length !== 6) {
-      App.showToast('กรุณากรอกรหัส PIN 6 หลัก', 'warning');
-      return;
-    }
-
-    if (!this.currentBookingId) {
-      App.showToast('ไม่พบข้อมูลการจองที่ต้องการยกเลิก', 'error');
-      return;
-    }
-
-    confirmBtn.disabled = true;
-    const originalText = confirmBtn.innerHTML;
-    confirmBtn.innerHTML = '<span class="spinner"></span> กำลังยกเลิก...';
-
-    try {
-      const response = await fetch(`/api/bookings/${this.currentBookingId}/cancel`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        App.closeAllModals();
-        if (window.CalendarModule) {
-          CalendarModule.refreshEvents();
-        }
-        App.showToast('ยกเลิกการจองสำเร็จ', 'success');
-      } else {
-        App.showToast(result.message, 'error');
-      }
-    } catch (error) {
-      App.showToast('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง', 'error');
-    } finally {
-      confirmBtn.disabled = false;
-      confirmBtn.innerHTML = originalText;
-      pinInput.value = '';
-    }
   }
 };
 

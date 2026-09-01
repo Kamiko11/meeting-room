@@ -156,6 +156,14 @@
             </button>
           </form>
         </div>
+        <div class="contact-box">
+          <h3>📞 ช่องทางติดต่อสำนักคอมพิวเตอร์</h3>
+          <ul>
+            <li><span class="contact-icon">📞</span> โทร <strong>27419</strong></li>
+            <li><span class="contact-icon">📍</span> สำนักคอมพิวเตอร์ อาคารเรียนรวม ชั้น 3</li>
+            <li><span class="contact-icon">🕐</span> เวลาทำการ: วันจันทร์ - อาทิตย์ เวลา 8:30 - 18:30 น.</li>
+          </ul>
+        </div>
       </section>
     </div>
   </main>
@@ -187,12 +195,16 @@
           <span class="detail-value" id="detail-time"></span>
         </div>
         <div class="detail-row">
+          <span class="detail-label">สถานะ:</span>
+          <span class="detail-value" id="detail-status"></span>
+        </div>
+        <div class="detail-row">
           <span class="detail-label">วัตถุประสงค์:</span>
           <span class="detail-value" id="detail-purpose"></span>
         </div>
       </div>
       <div class="modal-footer">
-        <button id="btn-cancel-booking" class="btn btn-danger">ยกเลิกการจอง</button>
+        <p class="cancel-notice">💡 หากต้องการยกเลิกการจอง กรุณาติดต่อสำนักคอมพิวเตอร์ โทร 27419</p>
       </div>
     </div>
   </div>
@@ -205,7 +217,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
       </div>
       <div class="modal-header text-center">
-        <h3>จองสำเร็จ!</h3>
+        <h3>ส่งคำขอจองสำเร็จ!</h3>
       </div>
       <div class="modal-body">
         <div class="summary-box">
@@ -216,34 +228,12 @@
           <div class="detail-row"><span class="detail-label">วัตถุประสงค์:</span> <span id="success-purpose"></span></div>
         </div>
         
-        <div class="pin-container">
-          <div class="pin-warning">
-            <span class="icon">⚠️</span> กรุณาจดรหัส PIN นี้ไว้ สำหรับใช้ยกเลิกการจอง
-          </div>
-          <div id="success-pin" class="pin-display"></div>
+        <div class="pending-notice">
+          <div class="pending-icon">⏳</div>
+          <p><strong>คำขอจองของคุณถูกส่งเรียบร้อยแล้ว</strong></p>
+          <p>กรุณารอการอนุมัติจากเจ้าหน้าที่สำนักคอมพิวเตอร์</p>
+          <p class="contact-hint">📞 สอบถามเพิ่มเติม โทร 27419</p>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 3. Cancel Modal -->
-  <div id="cancel-modal" class="modal">
-    <div class="modal-content">
-      <button class="modal-close" aria-label="Close">&times;</button>
-      <div class="modal-header">
-        <h3>ยกเลิกการจอง</h3>
-      </div>
-      <div class="modal-body">
-        <form id="cancel-form">
-          <div class="form-group">
-            <label for="cancel-pin">รหัส PIN 6 หลัก</label>
-            <input type="text" id="cancel-pin" required pattern="[0-9]{6}" maxlength="6" inputmode="numeric" autocomplete="off" placeholder="กรอก PIN 6 หลัก">
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" id="btn-back-detail">กลับ</button>
-            <button type="submit" class="btn btn-danger" id="btn-confirm-cancel">ยืนยันยกเลิก</button>
-          </div>
-        </form>
       </div>
     </div>
   </div>

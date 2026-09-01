@@ -17,8 +17,11 @@ const bookingSchema = new mongoose.Schema({
     start_time: { type: String, required: true },
     end_time: { type: String, required: true },
     purpose: { type: String, required: true },
-    cancel_pin: { type: String, required: true },
-    status: { type: String, default: 'active', enum: ['active', 'cancelled'] },
+    cancel_pin: { type: String, required: false },
+    status: { type: String, default: 'pending', enum: ['pending', 'approved', 'rejected', 'cancelled'] },
+    approved_at: { type: Date },
+    rejected_at: { type: Date },
+    admin_note: { type: String },
     cancelled_at: { type: Date }
 }, {
     timestamps: { createdAt: 'created_at', updatedAt: false }

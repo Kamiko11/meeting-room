@@ -43,9 +43,6 @@ const CalendarModule = {
         info.el.title = info.event.title;
       },
       
-      eventColor: '#1565c0',
-      eventTextColor: '#ffffff',
-      
       height: 'auto',
       contentHeight: 'auto'
     });
@@ -63,10 +60,10 @@ const CalendarModule = {
       App.formatTime(props.startTime) + ' - ' + App.formatTime(props.endTime);
     document.getElementById('detail-purpose').textContent = props.purpose || '-';
     
-    // Store event id globally in BookingModule to use it for cancellation
-    if (typeof BookingModule !== 'undefined') {
-      BookingModule.currentBookingId = event.id;
-    }
+    const statusHtml = props.status === 'approved' 
+      ? '<span class="status-approved">✅ อนุมัติแล้ว</span>' 
+      : '<span class="status-pending">⏳ รออนุมัติ</span>';
+    document.getElementById('detail-status').innerHTML = statusHtml;
     
     App.openModal('detail-modal');
   },

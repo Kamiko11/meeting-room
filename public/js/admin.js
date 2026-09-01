@@ -4,6 +4,8 @@ const Admin = {
   bookings: [],
   targetBookingId: null,
   targetBookingName: null,
+  lastPendingCount: 0,
+  pollingInterval: null,
 
   // ============================================================
   //  INITIALIZATION
@@ -53,12 +55,26 @@ const Admin = {
       });
     });
 
+    // Approve confirm button
+    document.getElementById('btn-confirm-approve').addEventListener('click', () => {
+      this.executeApprove();
+    });
+    document.getElementById('btn-approve-back').addEventListener('click', () => {
+      App.closeModal('admin-approve-modal');
+    });
+
+    // Reject confirm button
+    document.getElementById('btn-confirm-reject').addEventListener('click', () => {
+      this.executeReject();
+    });
+    document.getElementById('btn-reject-back').addEventListener('click', () => {
+      App.closeModal('admin-reject-modal');
+    });
+
     // Force cancel confirm button
     document.getElementById('btn-confirm-force-cancel').addEventListener('click', () => {
       this.executeForceCancel();
     });
-
-    // Cancel back button
     document.getElementById('btn-cancel-back').addEventListener('click', () => {
       App.closeModal('admin-cancel-modal');
     });
@@ -114,10 +130,12 @@ const Admin = {
   logout() {
     this.password = null;
     sessionStorage.removeItem('adminPassword');
+    this.stopPolling();
     document.getElementById('dashboard-screen').style.display = 'none';
     document.getElementById('header-actions').style.display = 'none';
     document.getElementById('login-screen').style.display = '';
     document.getElementById('admin-password').value = '';
+    document.title = 'Admin Dashboard | ระบบจองห้องประชุม มศว';
     App.showToast('ออกจากระบบแล้ว', 'info');
   },
 
@@ -126,6 +144,24 @@ const Admin = {
     document.getElementById('dashboard-screen').style.display = '';
     document.getElementById('header-actions').style.display = 'flex';
     this.loadBookings();
+    this.startPolling();
+  },
+
+  // ============================================================
+  //  POLLING (check for new pending bookings every 30s)
+  // ============================================================
+  startPolling() {
+    this.stopPolling();
+    this.pollingInterval = setInterval(() => {
+      this.loadBookings();
+    }, 30000);
+  },
+
+  stopPolling() {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
   },
 
   // ============================================================
@@ -146,6 +182,25 @@ const Admin = {
       const data = await res.json();
       if (data.success) {
         this.bookings = data.bookings;
+        const pendingCount = data.pendingCount || 0;
+
+        // Notify if new pending bookings arrived
+        if (pendingCount > this.lastPendingCount && this.lastPendingCount >= 0) {
+          const newCount = pendingCount - this.lastPendingCount;
+          if (this.lastPendingCount > 0) {
+            App.showToast(`📬 มีคำขอจองใหม่ ${newCount} รายการ!`, 'warning', 5000);
+            this.playNotificationSound();
+          }
+        }
+        this.lastPendingCount = pendingCount;
+
+        // Update title with pending count
+        if (pendingCount > 0) {
+          document.title = `(${pendingCount}) Admin Dashboard | ระบบจองห้องประชุม มศว`;
+        } else {
+          document.title = 'Admin Dashboard | ระบบจองห้องประชุม มศว';
+        }
+
         this.updateStats();
         this.renderTable();
       }
@@ -154,14 +209,37 @@ const Admin = {
     }
   },
 
+  playNotificationSound() {
+    try {
+      // Use Web Audio API for a simple beep
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      gain.gain.value = 0.3;
+      oscillator.start();
+      setTimeout(() => {
+        oscillator.stop();
+        ctx.close();
+      }, 200);
+    } catch (e) {
+      // Ignore audio errors
+    }
+  },
+
   updateStats() {
     const total = this.bookings.length;
-    const active = this.bookings.filter(b => b.status === 'active').length;
-    const cancelled = this.bookings.filter(b => b.status === 'cancelled').length;
+    const pending = this.bookings.filter(b => b.status === 'pending').length;
+    const approved = this.bookings.filter(b => b.status === 'approved').length;
+    const cancelledRejected = this.bookings.filter(b => b.status === 'cancelled' || b.status === 'rejected').length;
 
     document.getElementById('stat-total').textContent = total;
-    document.getElementById('stat-active').textContent = active;
-    document.getElementById('stat-cancelled').textContent = cancelled;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-approved').textContent = approved;
+    document.getElementById('stat-cancelled').textContent = cancelledRejected;
   },
 
   // ============================================================
@@ -186,30 +264,58 @@ const Admin = {
     const filtered = this.getFilteredBookings();
 
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">ไม่พบรายการจอง</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">ไม่พบรายการจอง</td></tr>';
       return;
     }
 
     tbody.innerHTML = filtered.map((b, index) => {
-      const isActive = b.status === 'active';
-      const statusClass = isActive ? 'status-active' : 'status-cancelled';
-      const statusText = isActive ? '✅ ใช้งาน' : '❌ ยกเลิก';
       const dateThai = App.formatDateThai(b.booking_date);
       const timeRange = App.formatTime(b.start_time) + ' - ' + App.formatTime(b.end_time);
 
-      const actionBtns = isActive
-        ? `<div class="action-btns">
-             <button class="btn-action btn-force-cancel" onclick="Admin.confirmForceCancel('${b.id}', '${this.escapeHtml(b.full_name)}', '${dateThai} ${timeRange}')">
-               ยกเลิก
-             </button>
-             <button class="btn-action btn-reset-pin" onclick="Admin.resetPin('${b.id}', '${this.escapeHtml(b.full_name)}')">
-               รีเซ็ต PIN
-             </button>
-           </div>`
-        : `<span style="color:var(--color-text-secondary); font-size:0.8rem;">—</span>`;
+      let statusClass, statusText;
+      switch (b.status) {
+        case 'pending':
+          statusClass = 'status-pending-badge';
+          statusText = '⏳ รออนุมัติ';
+          break;
+        case 'approved':
+          statusClass = 'status-active';
+          statusText = '✅ อนุมัติ';
+          break;
+        case 'rejected':
+          statusClass = 'status-rejected';
+          statusText = '❌ ปฏิเสธ';
+          break;
+        case 'cancelled':
+          statusClass = 'status-cancelled';
+          statusText = '🚫 ยกเลิก';
+          break;
+        default:
+          statusClass = '';
+          statusText = b.status;
+      }
 
-      return `<tr style="animation-delay:${index * 0.03}s">
-        <td><strong>#${b.id}</strong></td>
+      let actionBtns = '';
+      if (b.status === 'pending') {
+        actionBtns = `<div class="action-btns">
+          <button class="btn-action btn-approve" onclick="Admin.confirmApprove('${b.id}', '${this.escapeHtml(b.full_name)}', '${dateThai} ${timeRange}')">
+            ✅ อนุมัติ
+          </button>
+          <button class="btn-action btn-reject" onclick="Admin.confirmReject('${b.id}', '${this.escapeHtml(b.full_name)}', '${dateThai} ${timeRange}')">
+            ❌ ปฏิเสธ
+          </button>
+        </div>`;
+      } else if (b.status === 'approved') {
+        actionBtns = `<div class="action-btns">
+          <button class="btn-action btn-force-cancel" onclick="Admin.confirmForceCancel('${b.id}', '${this.escapeHtml(b.full_name)}', '${dateThai} ${timeRange}')">
+            ยกเลิก
+          </button>
+        </div>`;
+      } else {
+        actionBtns = `<span style="color:var(--color-text-secondary); font-size:0.8rem;">—</span>`;
+      }
+
+      return `<tr style="animation-delay:${index * 0.03}s" class="${b.status === 'pending' ? 'row-pending' : ''}">
         <td>${this.escapeHtml(b.full_name)}</td>
         <td>${this.escapeHtml(b.faculty)}</td>
         <td>${dateThai}</td>
@@ -222,7 +328,94 @@ const Admin = {
   },
 
   // ============================================================
-  //  ACTIONS
+  //  ACTIONS: APPROVE
+  // ============================================================
+  confirmApprove(id, name, detail) {
+    this.targetBookingId = id;
+    this.targetBookingName = name;
+    document.getElementById('approve-target-name').textContent = name;
+    document.getElementById('approve-target-detail').textContent = detail;
+    App.openModal('admin-approve-modal');
+  },
+
+  async executeApprove() {
+    const btn = document.getElementById('btn-confirm-approve');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> กำลังอนุมัติ...';
+
+    try {
+      const res = await fetch(`/api/admin/bookings/${this.targetBookingId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.password}`
+        }
+      });
+      const data = await res.json();
+
+      App.closeModal('admin-approve-modal');
+
+      if (data.success) {
+        App.showToast(`อนุมัติการจองของ ${this.targetBookingName} สำเร็จ`, 'success');
+        this.loadBookings();
+      } else {
+        App.showToast(data.message, 'error');
+      }
+    } catch (err) {
+      App.showToast('เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '✅ อนุมัติ';
+    }
+  },
+
+  // ============================================================
+  //  ACTIONS: REJECT
+  // ============================================================
+  confirmReject(id, name, detail) {
+    this.targetBookingId = id;
+    this.targetBookingName = name;
+    document.getElementById('reject-target-name').textContent = name;
+    document.getElementById('reject-target-detail').textContent = detail;
+    document.getElementById('reject-reason').value = '';
+    App.openModal('admin-reject-modal');
+  },
+
+  async executeReject() {
+    const btn = document.getElementById('btn-confirm-reject');
+    const reason = document.getElementById('reject-reason').value.trim();
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> กำลังปฏิเสธ...';
+
+    try {
+      const res = await fetch(`/api/admin/bookings/${this.targetBookingId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.password}`
+        },
+        body: JSON.stringify({ reason })
+      });
+      const data = await res.json();
+
+      App.closeModal('admin-reject-modal');
+
+      if (data.success) {
+        App.showToast(`ปฏิเสธการจองของ ${this.targetBookingName} แล้ว`, 'success');
+        this.loadBookings();
+      } else {
+        App.showToast(data.message, 'error');
+      }
+    } catch (err) {
+      App.showToast('เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '❌ ปฏิเสธการจอง';
+    }
+  },
+
+  // ============================================================
+  //  ACTIONS: FORCE CANCEL (approved bookings only)
   // ============================================================
   confirmForceCancel(id, name, detail) {
     this.targetBookingId = id;
@@ -260,38 +453,6 @@ const Admin = {
     } finally {
       btn.disabled = false;
       btn.innerHTML = 'ยืนยันยกเลิกการจอง';
-    }
-  },
-
-  async resetPin(id, name) {
-    const btn = event.target;
-    btn.disabled = true;
-    const originalText = btn.textContent;
-    btn.textContent = 'กำลังรีเซ็ต...';
-
-    try {
-      const res = await fetch(`/api/admin/bookings/${id}/reset-pin`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.password}`
-        }
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        document.getElementById('pin-target-name').textContent = name;
-        document.getElementById('admin-new-pin').textContent = data.newPin;
-        App.openModal('admin-pin-modal');
-        App.showToast('รีเซ็ต PIN สำเร็จ', 'success');
-      } else {
-        App.showToast(data.message, 'error');
-      }
-    } catch (err) {
-      App.showToast('เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = originalText;
     }
   },
 

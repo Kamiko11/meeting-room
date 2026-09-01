@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const bcrypt = require('bcryptjs');
 const { connectDB, Booking } = require('./database');
 
 const app = express();
@@ -37,21 +36,26 @@ app.use(express.static('public'));
  */
 app.get('/api/bookings', async (req, res, next) => {
     try {
-        const bookings = await Booking.find({ status: 'active' }).sort({ booking_date: 1, start_time: 1 });
-        const events = bookings.map(booking => ({
-            id: booking._id,
-            title: "จองโดย: " + booking.full_name,
-            start: booking.booking_date + "T" + booking.start_time,
-            end: booking.booking_date + "T" + booking.end_time,
-            extendedProps: {
-                fullName: booking.full_name,
-                faculty: booking.faculty,
-                purpose: booking.purpose,
-                bookingDate: booking.booking_date,
-                startTime: booking.start_time,
-                endTime: booking.end_time
-            }
-        }));
+        const bookings = await Booking.find({ status: { $in: ['pending', 'approved'] } }).sort({ booking_date: 1, start_time: 1 });
+        const events = bookings.map(booking => {
+            const isPending = booking.status === 'pending';
+            return {
+                id: booking._id,
+                title: isPending ? "รอนุมัติ: " + booking.full_name : "จองโดย: " + booking.full_name,
+                start: booking.booking_date + "T" + booking.start_time,
+                end: booking.booking_date + "T" + booking.end_time,
+                color: isPending ? '#ff9800' : '#1565c0',
+                extendedProps: {
+                    fullName: booking.full_name,
+                    faculty: booking.faculty,
+                    purpose: booking.purpose,
+                    bookingDate: booking.booking_date,
+                    startTime: booking.start_time,
+                    endTime: booking.end_time,
+                    status: booking.status
+                }
+            };
+        });
         res.json(events);
     } catch (err) {
         next(err);
@@ -65,9 +69,8 @@ app.get('/api/bookings', async (req, res, next) => {
 app.get('/api/bookings/:date', async (req, res, next) => {
     try {
         const { date } = req.params;
-        const bookings = await Booking.find({ status: 'active', booking_date: date })
+        const bookings = await Booking.find({ status: { $in: ['pending', 'approved'] }, booking_date: date })
             .sort({ start_time: 1 })
-            .select('-cancel_pin')
             .lean();
             
         // Map _id to id for frontend compatibility
@@ -124,7 +127,7 @@ app.post('/api/bookings', async (req, res, next) => {
 
         // 6. Check overlap
         const overlaps = await Booking.find({
-            status: 'active',
+            status: { $in: ['pending', 'approved'] },
             booking_date: bookingDate,
             start_time: { $lt: endTime },
             end_time: { $gt: startTime }
@@ -138,13 +141,6 @@ app.post('/api/bookings', async (req, res, next) => {
             });
         }
         
-        // Create random 6-digit PIN (100000-999999)
-        const plainPin = Math.floor(100000 + Math.random() * 900000).toString();
-        
-        // Hash the PIN with bcryptjs (salt rounds 10)
-        const salt = await bcrypt.genSalt(10);
-        const cancelPinHash = await bcrypt.hash(plainPin, salt);
-        
         // Save to database
         const newBooking = new Booking({
             full_name: fullName,
@@ -152,58 +148,21 @@ app.post('/api/bookings', async (req, res, next) => {
             booking_date: bookingDate,
             start_time: startTime,
             end_time: endTime,
-            purpose: purpose,
-            cancel_pin: cancelPinHash
+            purpose: purpose
         });
 
         await newBooking.save();
         
         const bookingResponse = newBooking.toObject();
         bookingResponse.id = bookingResponse._id; // Mapping for frontend
-        delete bookingResponse.cancel_pin; // Remove pin before sending back
 
-        // Return 201 with booking info and plain PIN
+        // Return 201 with booking info
         res.status(201).json({
             success: true,
-            message: 'จองสำเร็จ',
-            booking: bookingResponse,
-            cancelPin: plainPin
+            message: 'ส่งคำขอจองสำเร็จ รอการอนุมัติจาก Admin',
+            booking: bookingResponse
         });
         
-    } catch (err) {
-        next(err);
-    }
-});
-
-/**
- * POST /api/bookings/:id/cancel
- * Cancel an existing booking
- */
-app.post('/api/bookings/:id/cancel', async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const { pin } = req.body;
-        
-        if (!pin) {
-            return res.status(400).json({ success: false, message: 'กรุณาระบุ PIN' });
-        }
-        
-        const booking = await Booking.findOne({ _id: id, status: 'active' });
-        
-        if (!booking) {
-            return res.status(404).json({ success: false, message: 'ไม่พบรายการจองนี้ หรือถูกยกเลิกไปแล้ว' });
-        }
-        
-        const isMatch = await bcrypt.compare(pin, booking.cancel_pin);
-        
-        if (!isMatch) {
-            return res.status(403).json({ success: false, message: 'รหัส PIN ไม่ถูกต้อง' });
-        }
-        
-        // Delete booking from database
-        await Booking.deleteOne({ _id: id });
-        
-        res.json({ success: true, message: 'ยกเลิกการจองสำเร็จ' });
     } catch (err) {
         next(err);
     }
@@ -234,12 +193,64 @@ app.get('/api/admin/bookings', requireAdmin, async (req, res, next) => {
     try {
         const bookings = await Booking.find()
             .sort({ created_at: -1 })
-            .select('-cancel_pin')
             .lean();
             
         // Map _id to id for frontend compatibility
         const formattedBookings = bookings.map(b => ({ ...b, id: b._id }));
-        res.json({ success: true, bookings: formattedBookings });
+        
+        const pendingCount = await Booking.countDocuments({ status: 'pending' });
+        
+        res.json({ success: true, bookings: formattedBookings, pendingCount });
+    } catch (err) {
+        next(err);
+    }
+});
+
+/**
+ * POST /api/admin/bookings/:id/approve
+ * Approve a pending booking
+ */
+app.post('/api/admin/bookings/:id/approve', requireAdmin, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        
+        const booking = await Booking.findOne({ _id: id, status: 'pending' });
+        
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'ไม่พบรายการจองนี้ หรือสถานะไม่ใช่รอดำเนินการ' });
+        }
+        
+        booking.status = 'approved';
+        booking.approved_at = new Date();
+        await booking.save();
+        
+        res.json({ success: true, message: 'อนุมัติการจองสำเร็จ' });
+    } catch (err) {
+        next(err);
+    }
+});
+
+/**
+ * POST /api/admin/bookings/:id/reject
+ * Reject a pending booking
+ */
+app.post('/api/admin/bookings/:id/reject', requireAdmin, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+        
+        const booking = await Booking.findOne({ _id: id, status: 'pending' });
+        
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'ไม่พบรายการจองนี้ หรือสถานะไม่ใช่รอดำเนินการ' });
+        }
+        
+        booking.status = 'rejected';
+        booking.rejected_at = new Date();
+        booking.admin_note = reason;
+        await booking.save();
+        
+        res.json({ success: true, message: 'ปฏิเสธการจองแล้ว' });
     } catch (err) {
         next(err);
     }
@@ -247,13 +258,13 @@ app.get('/api/admin/bookings', requireAdmin, async (req, res, next) => {
 
 /**
  * POST /api/admin/bookings/:id/force-cancel
- * Admin force cancel — no PIN required.
+ * Admin force cancel
  */
 app.post('/api/admin/bookings/:id/force-cancel', requireAdmin, async (req, res, next) => {
     try {
         const { id } = req.params;
         
-        const booking = await Booking.findOne({ _id: id, status: 'active' });
+        const booking = await Booking.findOne({ _id: id, status: 'approved' });
         
         if (!booking) {
             return res.status(404).json({ success: false, message: 'ไม่พบรายการจองนี้ หรือถูกยกเลิกไปแล้ว' });
@@ -264,37 +275,6 @@ app.post('/api/admin/bookings/:id/force-cancel', requireAdmin, async (req, res, 
         await booking.save();
         
         res.json({ success: true, message: 'ยกเลิกการจองสำเร็จ' });
-    } catch (err) {
-        next(err);
-    }
-});
-
-/**
- * POST /api/admin/bookings/:id/reset-pin
- * Generate new 6-digit PIN, hash it, store it, return the plain PIN.
- */
-app.post('/api/admin/bookings/:id/reset-pin', requireAdmin, async (req, res, next) => {
-    try {
-        const { id } = req.params;
-
-        const booking = await Booking.findOne({ _id: id, status: 'active' });
-        
-        if (!booking) {
-            return res.status(404).json({ success: false, message: 'ไม่พบรายการจองนี้ หรือถูกยกเลิกไปแล้ว' });
-        }
-
-        // Generate new 6-digit PIN
-        const newPin = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // Hash with bcrypt
-        const salt = await bcrypt.genSalt(10);
-        const newPinHash = await bcrypt.hash(newPin, salt);
-
-        // Save to database
-        booking.cancel_pin = newPinHash;
-        await booking.save();
-
-        res.json({ success: true, message: 'รีเซ็ต PIN สำเร็จ', newPin });
     } catch (err) {
         next(err);
     }

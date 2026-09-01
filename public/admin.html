@@ -58,17 +58,21 @@
 
     <!-- Stats Bar -->
     <div class="stats-bar">
+      <div class="stat-card stat-pending">
+        <div class="stat-number" id="stat-pending">0</div>
+        <div class="stat-label">รออนุมัติ</div>
+      </div>
+      <div class="stat-card stat-active">
+        <div class="stat-number" id="stat-approved">0</div>
+        <div class="stat-label">อนุมัติแล้ว</div>
+      </div>
       <div class="stat-card">
         <div class="stat-number" id="stat-total">0</div>
         <div class="stat-label">การจองทั้งหมด</div>
       </div>
-      <div class="stat-card stat-active">
-        <div class="stat-number" id="stat-active">0</div>
-        <div class="stat-label">กำลังใช้งาน</div>
-      </div>
       <div class="stat-card stat-cancelled">
         <div class="stat-number" id="stat-cancelled">0</div>
-        <div class="stat-label">ยกเลิกแล้ว</div>
+        <div class="stat-label">ยกเลิก/ปฏิเสธ</div>
       </div>
     </div>
 
@@ -78,7 +82,9 @@
       <div class="filter-controls">
         <select id="filter-status">
           <option value="all">ทุกสถานะ</option>
-          <option value="active">กำลังใช้งาน</option>
+          <option value="pending">รออนุมัติ</option>
+          <option value="approved">อนุมัติแล้ว</option>
+          <option value="rejected">ปฏิเสธ</option>
           <option value="cancelled">ยกเลิกแล้ว</option>
         </select>
         <input type="text" id="filter-search" placeholder="🔍 ค้นหาชื่อ / คณะ...">
@@ -92,7 +98,6 @@
         <table id="bookings-table">
           <thead>
             <tr>
-              <th>ID</th>
               <th>ชื่อผู้จอง</th>
               <th>คณะ</th>
               <th>วันที่</th>
@@ -104,13 +109,53 @@
           </thead>
           <tbody id="bookings-tbody">
             <tr>
-              <td colspan="8" class="empty-state">กำลังโหลดข้อมูล...</td>
+              <td colspan="7" class="empty-state">กำลังโหลดข้อมูล...</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
   </main>
+
+  <!-- Modal: Confirm Approve -->
+  <div id="admin-approve-modal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <div class="modal-header">
+        <h3>✅ ยืนยันการอนุมัติ</h3>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-text">อนุมัติการจองของ <strong id="approve-target-name"></strong> หรือไม่?</p>
+        <p class="confirm-detail" id="approve-target-detail"></p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-approve-back">ยกเลิก</button>
+        <button class="btn btn-success" id="btn-confirm-approve">✅ อนุมัติ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Reject with Reason -->
+  <div id="admin-reject-modal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <div class="modal-header">
+        <h3>❌ ปฏิเสธการจอง</h3>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-text">ปฏิเสธการจองของ <strong id="reject-target-name"></strong></p>
+        <p class="confirm-detail" id="reject-target-detail"></p>
+        <div class="form-group" style="margin-top: 1rem;">
+          <label for="reject-reason">เหตุผล (ไม่บังคับ)</label>
+          <textarea id="reject-reason" rows="2" placeholder="ระบุเหตุผลในการปฏิเสธ..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-reject-back">ยกเลิก</button>
+        <button class="btn btn-danger" id="btn-confirm-reject">❌ ปฏิเสธการจอง</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal: Confirm Force Cancel -->
   <div id="admin-cancel-modal" class="modal">
@@ -130,30 +175,13 @@
     </div>
   </div>
 
-  <!-- Modal: New PIN Display -->
-  <div id="admin-pin-modal" class="modal">
-    <div class="modal-content success-content">
-      <button class="modal-close" aria-label="Close">&times;</button>
-      <div class="success-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
-      </div>
-      <div class="modal-header text-center">
-        <h3>รีเซ็ต PIN สำเร็จ!</h3>
-      </div>
-      <div class="modal-body">
-        <p class="pin-owner">PIN ใหม่สำหรับ: <strong id="pin-target-name"></strong></p>
-        <div class="pin-container">
-          <div class="pin-warning">
-            <span class="icon">📋</span> กรุณาแจ้ง PIN ใหม่นี้ให้นิสิตเจ้าของการจองทราบ
-          </div>
-          <div id="admin-new-pin" class="pin-display"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Toast Container -->
   <div id="toast-container"></div>
+
+  <!-- Notification Sound -->
+  <audio id="notification-sound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgiq60teleNjV3markup" type="audio/wav">
+  </audio>
 
   <!-- Footer -->
   <footer class="app-footer">
