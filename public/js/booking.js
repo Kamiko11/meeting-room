@@ -38,14 +38,16 @@ const BookingModule = {
     const startTimeInput = document.getElementById('start-time');
     if (startTimeInput) {
       startTimeInput.addEventListener('change', (e) => {
-        const endTimeInput = document.getElementById('end-time');
+        const endTimeSelect = document.getElementById('end-time');
         const startTime = e.target.value;
-        if (startTime) {
-          const [h, m] = startTime.split(':').map(Number);
-          const minEnd = new Date(2000, 0, 1, h, m + 30);
-          const hh = String(minEnd.getHours()).padStart(2, '0');
-          const mm = String(minEnd.getMinutes()).padStart(2, '0');
-          endTimeInput.min = `${hh}:${mm}`;
+        // Disable end-time options that are <= start time
+        Array.from(endTimeSelect.options).forEach(option => {
+          if (option.value === '') return; // skip placeholder
+          option.disabled = option.value <= startTime;
+        });
+        // Reset end-time if current selection is invalid
+        if (endTimeSelect.value && endTimeSelect.value <= startTime) {
+          endTimeSelect.value = '';
         }
       });
     }
