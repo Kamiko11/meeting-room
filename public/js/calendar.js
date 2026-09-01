@@ -20,7 +20,7 @@ const CalendarModule = {
         week: 'สัปดาห์'
       },
       slotMinTime: '08:30:00',
-      slotMaxTime: '16:30:00',
+      slotMaxTime: '18:30:00',
       allDaySlot: false,
       selectable: false,
       editable: false,

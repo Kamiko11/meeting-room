@@ -101,11 +101,11 @@ app.post('/api/bookings', async (req, res, next) => {
         const startMins = timeToMinutes(startTime);
         const endMins = timeToMinutes(endTime);
         const openMins = timeToMinutes('08:30');
-        const closeMins = timeToMinutes('16:30');
+        const closeMins = timeToMinutes('18:30');
         
         // 2. Service hours check
         if (startMins < openMins || endMins > closeMins) {
-            return res.status(400).json({ success: false, message: 'เวลาให้บริการคือ 08:30 ถึง 16:30' });
+            return res.status(400).json({ success: false, message: 'เวลาให้บริการคือ 08:30 ถึง 18:30' });
         }
         
         // 3. Start time before end time
