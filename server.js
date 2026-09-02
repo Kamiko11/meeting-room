@@ -46,13 +46,13 @@ async function setupSmtpTransport() {
 
             transporter = nodemailer.createTransport({
                 host: hostConfig, // ใช้ IP ที่ resolve ได้ตรงๆ เลย ไม่ต้องผ่าน DNS ตอนส่ง
-                port: 587,
-                secure: false,
+                port: 465,        // ลองเปลี่ยนไปใช้ port 465 (SSL)
+                secure: true,     // ต้องตั้งเป็น true เมื่อใช้ port 465
                 pool: true,
                 maxConnections: 1,
-                connectionTimeout: 10000,
-                greetingTimeout: 10000,
-                socketTimeout: 15000,
+                connectionTimeout: 20000, // เพิ่ม timeout ให้รอนานขึ้นหน่อย
+                greetingTimeout: 20000,
+                socketTimeout: 30000,
                 auth: {
                     user: process.env.EMAIL_USER,
                     pass: process.env.EMAIL_PASS
