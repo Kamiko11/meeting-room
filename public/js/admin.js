@@ -78,6 +78,17 @@ const Admin = {
     document.getElementById('btn-cancel-back').addEventListener('click', () => {
       App.closeModal('admin-cancel-modal');
     });
+
+    // Clear data button and modal
+    document.getElementById('btn-clear-data').addEventListener('click', () => {
+      this.confirmClearData();
+    });
+    document.getElementById('btn-confirm-clear').addEventListener('click', () => {
+      this.executeClearData();
+    });
+    document.getElementById('btn-clear-back').addEventListener('click', () => {
+      App.closeModal('admin-clear-modal');
+    });
   },
 
   // ============================================================
@@ -453,6 +464,44 @@ const Admin = {
     } finally {
       btn.disabled = false;
       btn.innerHTML = 'ยืนยันยกเลิกการจอง';
+    }
+  },
+
+  // ============================================================
+  //  ACTIONS: CLEAR COMPLETED DATA
+  // ============================================================
+  confirmClearData() {
+    App.openModal('admin-clear-modal');
+  },
+
+  async executeClearData() {
+    const btn = document.getElementById('btn-confirm-clear');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> กำลังเคลียร์...';
+
+    try {
+      const res = await fetch('/api/admin/bookings/clear-completed', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.password}`
+        }
+      });
+      const data = await res.json();
+
+      App.closeModal('admin-clear-modal');
+
+      if (data.success) {
+        App.showToast(data.message, 'success');
+        this.loadBookings();
+      } else {
+        App.showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
+      }
+    } catch (err) {
+      App.showToast('เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '🧹 ยืนยันเคลียร์ข้อมูล';
     }
   },
 

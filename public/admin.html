@@ -89,6 +89,7 @@
         </select>
         <input type="text" id="filter-search" placeholder="🔍 ค้นหาชื่อ / คณะ...">
         <button class="btn btn-refresh" id="btn-refresh">🔄 รีเฟรช</button>
+        <button class="btn btn-clear-data" id="btn-clear-data">🧹 เคลียร์ข้อมูล</button>
       </div>
     </div>
 
@@ -171,6 +172,29 @@
       <div class="modal-actions">
         <button class="btn btn-secondary" id="btn-cancel-back">ยกเลิก</button>
         <button class="btn btn-danger" id="btn-confirm-force-cancel">ยืนยันยกเลิกการจอง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirm Clear Data -->
+  <div id="admin-clear-modal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <div class="modal-header">
+        <h3>🧹 เคลียร์ข้อมูลการจอง</h3>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-text">ต้องการลบรายการจองต่อไปนี้ออกจากระบบหรือไม่?</p>
+        <ul class="clear-list">
+          <li>🚫 รายการที่ <strong>ยกเลิก</strong> แล้วทั้งหมด</li>
+          <li>❌ รายการที่ <strong>ปฏิเสธ</strong> แล้วทั้งหมด</li>
+          <li>✅ รายการที่ <strong>อนุมัติแล้วและผ่านไปแล้ว</strong> (วันที่จองผ่านไปแล้ว)</li>
+        </ul>
+        <p class="clear-warning">⚠️ การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-clear-back">ยกเลิก</button>
+        <button class="btn btn-danger" id="btn-confirm-clear">🧹 ยืนยันเคลียร์ข้อมูล</button>
       </div>
     </div>
   </div>

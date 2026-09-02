@@ -280,6 +280,31 @@ app.post('/api/admin/bookings/:id/force-cancel', requireAdmin, async (req, res, 
     }
 });
 
+/**
+ * DELETE /api/admin/bookings/clear-completed
+ * Remove all cancelled, rejected, and past-completed bookings from DB
+ */
+app.delete('/api/admin/bookings/clear-completed', requireAdmin, async (req, res, next) => {
+    try {
+        const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+        const result = await Booking.deleteMany({
+            $or: [
+                { status: { $in: ['cancelled', 'rejected'] } },
+                { status: 'approved', booking_date: { $lt: today } }
+            ]
+        });
+
+        res.json({
+            success: true,
+            message: `เคลียร์ข้อมูลสำเร็จ ลบทั้งหมด ${result.deletedCount} รายการ`,
+            deletedCount: result.deletedCount
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
 // Global error handler middleware
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err);
