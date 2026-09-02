@@ -1,6 +1,20 @@
 require('dotenv').config();
 const dns = require('dns');
-dns.setDefaultResultOrder('ipv4first'); // บังคับ IPv4 ทั้ง process (แก้ Render IPv6 issue)
+
+// บังคับ DNS lookup ทั้ง process ให้ใช้ IPv4 เท่านั้น (แก้ Render IPv6 ENETUNREACH)
+const originalLookup = dns.lookup;
+dns.lookup = function(hostname, options, callback) {
+    if (typeof options === 'function') {
+        callback = options;
+        options = { family: 4 };
+    } else if (typeof options === 'number') {
+        options = { family: 4 };
+    } else {
+        options = Object.assign({}, options, { family: 4 });
+    }
+    return originalLookup.call(dns, hostname, options, callback);
+};
+
 const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
@@ -13,15 +27,11 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin1234';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 
-// ============================================================
-//  EMAIL CONFIGURATION
-// ============================================================
+
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
     secure: false,
-    family: 4,
-    localAddress: '0.0.0.0',
     pool: true,
     maxConnections: 1,
     connectionTimeout: 10000,
