@@ -314,29 +314,32 @@ const Admin = {
           statusText = b.status;
       }
 
-      let actionBtns = '';
+      let actionBtns = `<div class="action-btns">
+        <button class="btn-action btn-info" onclick="Admin.viewDetails('${b.id}')">
+          🔍 ดูข้อมูล
+        </button>`;
+
       if (b.status === 'pending') {
-        actionBtns = `<div class="action-btns">
+        actionBtns += `
           <button class="btn-action btn-approve" onclick="Admin.confirmApprove('${b.id}', '${this.escapeHtml(b.full_name)}', '${dateThai} ${timeRange}')">
             ✅ อนุมัติ
           </button>
           <button class="btn-action btn-reject" onclick="Admin.confirmReject('${b.id}', '${this.escapeHtml(b.full_name)}', '${dateThai} ${timeRange}')">
             ❌ ปฏิเสธ
-          </button>
-        </div>`;
+          </button>`;
       } else if (b.status === 'approved') {
-        actionBtns = `<div class="action-btns">
+        actionBtns += `
           <button class="btn-action btn-force-cancel" onclick="Admin.confirmForceCancel('${b.id}', '${this.escapeHtml(b.full_name)}', '${dateThai} ${timeRange}')">
             ยกเลิก
-          </button>
-        </div>`;
+          </button>`;
       } else {
-        actionBtns = `<div class="action-btns">
+        actionBtns += `
           <button class="btn-action btn-delete" onclick="Admin.confirmDelete('${b.id}', '${this.escapeHtml(b.full_name)}', '${dateThai} ${timeRange}')">
             🗑️ ลบ
-          </button>
-        </div>`;
+          </button>`;
       }
+      
+      actionBtns += `</div>`;
 
       return `<tr style="animation-delay:${index * 0.03}s" class="${b.status === 'pending' ? 'row-pending' : ''}">
         <td>${this.escapeHtml(b.full_name)}</td>
@@ -477,6 +480,40 @@ const Admin = {
       btn.disabled = false;
       btn.innerHTML = 'ยืนยันยกเลิกการจอง';
     }
+  },
+
+  // ============================================================
+  //  ACTIONS: VIEW DETAILS
+  // ============================================================
+  viewDetails(id) {
+    const b = this.bookings.find(x => x.id === id);
+    if (!b) return;
+
+    document.getElementById('view-name').textContent = b.full_name;
+    document.getElementById('view-faculty').textContent = b.faculty;
+    document.getElementById('view-email').textContent = b.email || '-';
+    document.getElementById('view-phone').textContent = b.phone || '-';
+    document.getElementById('view-date').textContent = App.formatDateThai(b.booking_date);
+    document.getElementById('view-time').textContent = App.formatTime(b.start_time) + ' - ' + App.formatTime(b.end_time) + ' น.';
+    document.getElementById('view-purpose').textContent = b.purpose;
+
+    let statusText = b.status;
+    if (b.status === 'pending') statusText = '⏳ รออนุมัติ';
+    else if (b.status === 'approved') statusText = '✅ อนุมัติแล้ว';
+    else if (b.status === 'rejected') statusText = '❌ ปฏิเสธ';
+    else if (b.status === 'cancelled') statusText = '🚫 ยกเลิกแล้ว';
+    document.getElementById('view-status').textContent = statusText;
+
+    const noteContainer = document.getElementById('view-note-container');
+    const noteText = document.getElementById('view-note');
+    if (b.admin_note) {
+      noteText.textContent = b.admin_note;
+      noteContainer.style.display = '';
+    } else {
+      noteContainer.style.display = 'none';
+    }
+
+    App.openModal('admin-detail-modal');
   },
 
   // ============================================================

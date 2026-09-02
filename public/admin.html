@@ -118,6 +118,32 @@
     </div>
   </main>
 
+  <!-- Modal: View Details -->
+  <div id="admin-detail-modal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <div class="modal-header">
+        <h3>📋 รายละเอียดการจอง</h3>
+      </div>
+      <div class="modal-body">
+        <div class="admin-detail-grid">
+          <div class="detail-item"><span class="label">ชื่อผู้จอง:</span> <span id="view-name"></span></div>
+          <div class="detail-item"><span class="label">คณะ:</span> <span id="view-faculty"></span></div>
+          <div class="detail-item"><span class="label">อีเมล:</span> <span id="view-email"></span></div>
+          <div class="detail-item"><span class="label">เบอร์โทรศัพท์:</span> <span id="view-phone"></span></div>
+          <div class="detail-item"><span class="label">วันที่จอง:</span> <span id="view-date"></span></div>
+          <div class="detail-item"><span class="label">เวลา:</span> <span id="view-time"></span></div>
+          <div class="detail-item"><span class="label">สถานะ:</span> <span id="view-status"></span></div>
+          <div class="detail-item full-width"><span class="label">วัตถุประสงค์:</span> <p id="view-purpose" class="detail-text-box"></p></div>
+          <div class="detail-item full-width" id="view-note-container" style="display:none;"><span class="label">หมายเหตุจาก Admin:</span> <p id="view-note" class="detail-text-box warning-box"></p></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="App.closeModal('admin-detail-modal')">ปิดหน้าต่าง</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Confirm Approve -->
   <div id="admin-approve-modal" class="modal">
     <div class="modal-content">

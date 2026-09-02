@@ -498,3 +498,58 @@ tbody tr {
     flex-direction: column;
   }
 }
+
+/* Admin Detail Modal Styles */
+.btn-info {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+.btn-info:hover {
+  background: #1565c0;
+  color: white;
+}
+
+.admin-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  text-align: left;
+  margin-top: 10px;
+}
+.detail-item {
+  background: #f9f9f9;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #eeeeee;
+}
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+.detail-item .label {
+  display: block;
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 4px;
+}
+.detail-item span:not(.label) {
+  font-weight: 600;
+  color: #222;
+  font-size: 0.95rem;
+}
+.detail-text-box {
+  margin: 0;
+  font-weight: 500;
+  color: #333;
+  white-space: pre-wrap;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.warning-box {
+  color: #c62828;
+}
+
+@media (max-width: 480px) {
+  .admin-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
