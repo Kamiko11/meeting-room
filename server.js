@@ -1,23 +1,7 @@
 require('dotenv').config();
-const dns = require('dns');
-
-// บังคับ DNS lookup ทั้ง process ให้ใช้ IPv4 เท่านั้น (แก้ Render IPv6 ENETUNREACH)
-const originalLookup = dns.lookup;
-dns.lookup = function(hostname, options, callback) {
-    if (typeof options === 'function') {
-        callback = options;
-        options = { family: 4 };
-    } else if (typeof options === 'number') {
-        options = { family: 4 };
-    } else {
-        options = Object.assign({}, options, { family: 4 });
-    }
-    return originalLookup.call(dns, hostname, options, callback);
-};
-
 const express = require('express');
 const cors = require('cors');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const { connectDB, Booking } = require('./database');
 
 const app = express();
@@ -27,45 +11,10 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin1234';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 
-
-// เราจะไม่ initialize transporter ทันที แต่จะ resolve IPv4 ก่อน
-let transporter;
-
-async function setupSmtpTransport() {
-    return new Promise((resolve) => {
-        dns.resolve4('smtp.gmail.com', (err, addresses) => {
-            // fallback ไปใช้ host name ปกติถ้าหาไม่เจอ
-            let hostConfig = 'smtp.gmail.com'; 
-            
-            if (!err && addresses && addresses.length > 0) {
-                hostConfig = addresses[0];
-                console.log('✅ Resolved smtp.gmail.com to IPv4:', hostConfig);
-            } else {
-                console.warn('⚠️ Failed to resolve IPv4 for SMTP, using hostname', err);
-            }
-
-            transporter = nodemailer.createTransport({
-                host: hostConfig, // ใช้ IP ที่ resolve ได้ตรงๆ เลย ไม่ต้องผ่าน DNS ตอนส่ง
-                port: 465,        // ลองเปลี่ยนไปใช้ port 465 (SSL)
-                secure: true,     // ต้องตั้งเป็น true เมื่อใช้ port 465
-                pool: true,
-                maxConnections: 1,
-                connectionTimeout: 20000, // เพิ่ม timeout ให้รอนานขึ้นหน่อย
-                greetingTimeout: 20000,
-                socketTimeout: 30000,
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                },
-                tls: {
-                    rejectUnauthorized: false,
-                    servername: 'smtp.gmail.com' // สำคัญมากเมื่อใช้ IP เป็น host
-                }
-            });
-            resolve();
-        });
-    });
-}
+// Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
+// For testing on Resend without a verified domain, you MUST use onboarding@resend.dev as the from address
+const SENDER_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
 /**
  * Format date string (YYYY-MM-DD) to Thai date format
@@ -81,9 +30,9 @@ function formatDateThaiServer(dateStr) {
  * Send email notification to student about booking status
  */
 async function sendEmailNotification(booking, type) {
-    // Skip if email config is not set
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.log('Email not configured, skipping notification');
+    // Skip if Resend API key is not set
+    if (!process.env.RESEND_API_KEY) {
+        console.log('Resend API key not configured, skipping notification');
         return;
     }
 
@@ -148,15 +97,20 @@ async function sendEmailNotification(booking, type) {
     </div>`;
 
     try {
-        await transporter.sendMail({
-            from: `"ระบบจองห้องประชุม มศว" <${process.env.EMAIL_USER}>`,
+        const { data, error } = await resend.emails.send({
+            from: `"ระบบจองห้องประชุม มศว" <${SENDER_EMAIL}>`,
             to: booking.email,
             subject: `${subject} - ระบบจองห้องประชุม มศว`,
             html: htmlContent
         });
-        console.log(`Email sent to ${booking.email} (${type})`);
+        
+        if (error) {
+            console.error('Failed to send status email via Resend:', error);
+        } else {
+            console.log(`Email sent to ${booking.email} (${type}), ID:`, data.id);
+        }
     } catch (err) {
-        console.error('Failed to send email:', err.message);
+        console.error('Exception sending status email:', err.message);
     }
 }
 
@@ -164,8 +118,8 @@ async function sendEmailNotification(booking, type) {
  * Send email to admin when a new booking is submitted
  */
 async function sendAdminNewBookingEmail(booking) {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS || !ADMIN_EMAIL) {
-        console.log('Admin email not configured, skipping admin notification');
+    if (!process.env.RESEND_API_KEY || !ADMIN_EMAIL) {
+        console.log('Resend API key or Admin email not configured, skipping admin notification');
         return;
     }
 
@@ -201,15 +155,20 @@ async function sendAdminNewBookingEmail(booking) {
     </div>`;
 
     try {
-        await transporter.sendMail({
-            from: `"ระบบจองห้องประชุม มศว" <${process.env.EMAIL_USER}>`,
+        const { data, error } = await resend.emails.send({
+            from: `"ระบบจองห้องประชุม มศว" <${SENDER_EMAIL}>`,
             to: ADMIN_EMAIL,
             subject: `📬 คำขอจองใหม่ - ${booking.full_name} (${dateThai})`,
             html: htmlContent
         });
-        console.log(`Admin notification email sent to ${ADMIN_EMAIL}`);
+        
+        if (error) {
+            console.error('Failed to send admin email via Resend:', error);
+        } else {
+            console.log(`Admin notification email sent to ${ADMIN_EMAIL}, ID:`, data.id);
+        }
     } catch (err) {
-        console.error('Failed to send admin email:', err.message);
+        console.error('Exception sending admin email:', err.message);
     }
 }
 
@@ -217,8 +176,8 @@ async function sendAdminNewBookingEmail(booking) {
  * Send confirmation email to booker when booking is submitted
  */
 async function sendBookerConfirmationEmail(booking) {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.log('Email not configured, skipping booker confirmation');
+    if (!process.env.RESEND_API_KEY) {
+        console.log('Resend API key not configured, skipping booker confirmation');
         return;
     }
 
@@ -255,15 +214,20 @@ async function sendBookerConfirmationEmail(booking) {
     </div>`;
 
     try {
-        await transporter.sendMail({
-            from: `"ระบบจองห้องประชุม มศว" <${process.env.EMAIL_USER}>`,
+        const { data, error } = await resend.emails.send({
+            from: `"ระบบจองห้องประชุม มศว" <${SENDER_EMAIL}>`,
             to: booking.email,
             subject: `📩 ได้รับคำขอจองห้องประชุมแล้ว - ระบบจองห้องประชุม มศว`,
             html: htmlContent
         });
-        console.log(`Booker confirmation email sent to ${booking.email}`);
+        
+        if (error) {
+            console.error('Failed to send booker confirmation email via Resend:', error);
+        } else {
+            console.log(`Booker confirmation email sent to ${booking.email}, ID:`, data.id);
+        }
     } catch (err) {
-        console.error('Failed to send booker confirmation email:', err.message);
+        console.error('Exception sending booker confirmation email:', err.message);
     }
 }
 
@@ -616,10 +580,9 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดที่เซิร์ฟเวอร์' });
 });
 
-// Start the server after initializing the database and SMTP transport
+// Start the server after initializing the database
 async function startServer() {
     try {
-        await setupSmtpTransport();
         await connectDB();
         app.listen(PORT, () => {
             console.log(`Server running on http://localhost:${PORT}`);
