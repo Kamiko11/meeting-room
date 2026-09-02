@@ -11,7 +11,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin1234';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 
 // Google Apps Script Web App URL สำหรับส่งอีเมล
-const GAS_EMAIL_URL = 'https://script.google.com/macros/s/AKfycbzXhJMOiXvMGl9Lq4cdeX-8IfP1Llh1eRiVt4xM9B-6k1rzNKvkcDfil5NBIcOfxTwO/exec';
+const GAS_EMAIL_URL = 'https://script.google.com/macros/s/AKfycbxyvqQJg3nMsJ9IopP0S-nQcwMA6WUkipYGZFSNr9d4EOtojEgqwpvOqie2CXoyX8mR0w/exec';
 
 /**
  * ฟังก์ชันหลักสำหรับเรียก Google Apps Script API เพื่อส่งอีเมล
