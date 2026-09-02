@@ -19,8 +19,14 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false, // ใช้ STARTTLS
-    family: 4, // บังคับใช้ IPv4 (แก้ปัญหา Render ไม่รองรับ IPv6)
+    secure: false,
+    family: 4,
+    localAddress: '0.0.0.0',
+    pool: true,
+    maxConnections: 1,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
