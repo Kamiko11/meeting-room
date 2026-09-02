@@ -176,6 +176,25 @@
     </div>
   </div>
 
+  <!-- Modal: Confirm Delete Single Record -->
+  <div id="admin-delete-modal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <div class="modal-header">
+        <h3>🗑️ ลบรายการจอง</h3>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-text">ต้องการลบรายการจองของ <strong id="delete-target-name"></strong> หรือไม่?</p>
+        <p class="confirm-detail" id="delete-target-detail"></p>
+        <p class="clear-warning">⚠️ การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-delete-back">ยกเลิก</button>
+        <button class="btn btn-danger" id="btn-confirm-delete">🗑️ ยืนยันลบ</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Confirm Clear Data -->
   <div id="admin-clear-modal" class="modal">
     <div class="modal-content">

@@ -382,6 +382,15 @@ tbody td {
   color: white;
 }
 
+.btn-delete {
+  background: #f5f5f5;
+  color: #616161;
+}
+.btn-delete:hover {
+  background: #c62828;
+  color: white;
+}
+
 .btn-action:disabled {
   opacity: 0.4;
   cursor: not-allowed;

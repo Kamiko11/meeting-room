@@ -89,6 +89,14 @@ const Admin = {
     document.getElementById('btn-clear-back').addEventListener('click', () => {
       App.closeModal('admin-clear-modal');
     });
+
+    // Delete single record modal
+    document.getElementById('btn-confirm-delete').addEventListener('click', () => {
+      this.executeDelete();
+    });
+    document.getElementById('btn-delete-back').addEventListener('click', () => {
+      App.closeModal('admin-delete-modal');
+    });
   },
 
   // ============================================================
@@ -323,7 +331,11 @@ const Admin = {
           </button>
         </div>`;
       } else {
-        actionBtns = `<span style="color:var(--color-text-secondary); font-size:0.8rem;">—</span>`;
+        actionBtns = `<div class="action-btns">
+          <button class="btn-action btn-delete" onclick="Admin.confirmDelete('${b.id}', '${this.escapeHtml(b.full_name)}', '${dateThai} ${timeRange}')">
+            🗑️ ลบ
+          </button>
+        </div>`;
       }
 
       return `<tr style="animation-delay:${index * 0.03}s" class="${b.status === 'pending' ? 'row-pending' : ''}">
@@ -464,6 +476,48 @@ const Admin = {
     } finally {
       btn.disabled = false;
       btn.innerHTML = 'ยืนยันยกเลิกการจอง';
+    }
+  },
+
+  // ============================================================
+  //  ACTIONS: DELETE SINGLE RECORD
+  // ============================================================
+  confirmDelete(id, name, detail) {
+    this.targetBookingId = id;
+    this.targetBookingName = name;
+    document.getElementById('delete-target-name').textContent = name;
+    document.getElementById('delete-target-detail').textContent = detail;
+    App.openModal('admin-delete-modal');
+  },
+
+  async executeDelete() {
+    const btn = document.getElementById('btn-confirm-delete');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> กำลังลบ...';
+
+    try {
+      const res = await fetch(`/api/admin/bookings/${this.targetBookingId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.password}`
+        }
+      });
+      const data = await res.json();
+
+      App.closeModal('admin-delete-modal');
+
+      if (data.success) {
+        App.showToast(data.message, 'success');
+        this.loadBookings();
+      } else {
+        App.showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
+      }
+    } catch (err) {
+      App.showToast('เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '🗑️ ยืนยันลบ';
     }
   },
 

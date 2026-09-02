@@ -305,6 +305,26 @@ app.delete('/api/admin/bookings/clear-completed', requireAdmin, async (req, res,
     }
 });
 
+/**
+ * DELETE /api/admin/bookings/:id
+ * Delete a single booking record by ID
+ */
+app.delete('/api/admin/bookings/:id', requireAdmin, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const booking = await Booking.findByIdAndDelete(id);
+
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'ไม่พบรายการจองนี้' });
+        }
+
+        res.json({ success: true, message: `ลบรายการจองของ ${booking.full_name} สำเร็จ` });
+    } catch (err) {
+        next(err);
+    }
+});
+
 // Global error handler middleware
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err);
