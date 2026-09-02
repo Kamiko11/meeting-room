@@ -28,23 +28,44 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin1234';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    pool: true,
-    maxConnections: 1,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
-});
+// เราจะไม่ initialize transporter ทันที แต่จะ resolve IPv4 ก่อน
+let transporter;
+
+async function setupSmtpTransport() {
+    return new Promise((resolve) => {
+        dns.resolve4('smtp.gmail.com', (err, addresses) => {
+            // fallback ไปใช้ host name ปกติถ้าหาไม่เจอ
+            let hostConfig = 'smtp.gmail.com'; 
+            
+            if (!err && addresses && addresses.length > 0) {
+                hostConfig = addresses[0];
+                console.log('✅ Resolved smtp.gmail.com to IPv4:', hostConfig);
+            } else {
+                console.warn('⚠️ Failed to resolve IPv4 for SMTP, using hostname', err);
+            }
+
+            transporter = nodemailer.createTransport({
+                host: hostConfig, // ใช้ IP ที่ resolve ได้ตรงๆ เลย ไม่ต้องผ่าน DNS ตอนส่ง
+                port: 587,
+                secure: false,
+                pool: true,
+                maxConnections: 1,
+                connectionTimeout: 10000,
+                greetingTimeout: 10000,
+                socketTimeout: 15000,
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS
+                },
+                tls: {
+                    rejectUnauthorized: false,
+                    servername: 'smtp.gmail.com' // สำคัญมากเมื่อใช้ IP เป็น host
+                }
+            });
+            resolve();
+        });
+    });
+}
 
 /**
  * Format date string (YYYY-MM-DD) to Thai date format
@@ -595,9 +616,10 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดที่เซิร์ฟเวอร์' });
 });
 
-// Start the server after initializing the database
+// Start the server after initializing the database and SMTP transport
 async function startServer() {
     try {
+        await setupSmtpTransport();
         await connectDB();
         app.listen(PORT, () => {
             console.log(`Server running on http://localhost:${PORT}`);
