@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 3000;
 
 // Admin password — change this in production or set via environment variable
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin1234';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 
 // ============================================================
 //  EMAIL CONFIGURATION
@@ -116,6 +117,113 @@ async function sendEmailNotification(booking, type) {
         console.log(`Email sent to ${booking.email} (${type})`);
     } catch (err) {
         console.error('Failed to send email:', err.message);
+    }
+}
+
+/**
+ * Send email to admin when a new booking is submitted
+ */
+async function sendAdminNewBookingEmail(booking) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS || !ADMIN_EMAIL) {
+        console.log('Admin email not configured, skipping admin notification');
+        return;
+    }
+
+    const dateThai = formatDateThaiServer(booking.booking_date);
+    const timeRange = `${booking.start_time} - ${booking.end_time} น.`;
+
+    const htmlContent = `
+    <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #ff9800, #f57c00); padding: 24px; text-align: center;">
+            <h2 style="color: white; margin: 0; font-size: 18px;">📬 มีคำขอจองห้องประชุมใหม่!</h2>
+            <p style="color: rgba(255,255,255,0.9); margin: 4px 0 0; font-size: 14px;">ระบบจองห้องประชุม สำนักคอมพิวเตอร์ มศว องครักษ์</p>
+        </div>
+        <div style="padding: 32px 24px;">
+            <p style="font-size: 16px; color: #333;">มีผู้ส่งคำขอจองห้องประชุมใหม่ กรุณาตรวจสอบและดำเนินการ</p>
+            <div style="background: #f9f9f9; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 8px 0; color: #666; width: 120px;">👤 ชื่อผู้จอง</td><td style="padding: 8px 0; font-weight: 600;">${booking.full_name}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #666;">📅 วันที่</td><td style="padding: 8px 0; font-weight: 600;">${dateThai}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #666;">⏰ เวลา</td><td style="padding: 8px 0; font-weight: 600;">${timeRange}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #666;">📋 คณะ</td><td style="padding: 8px 0;">${booking.faculty}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #666;">📧 อีเมล</td><td style="padding: 8px 0;">${booking.email}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #666;">📞 โทร</td><td style="padding: 8px 0;">${booking.phone}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #666;">📌 วัตถุประสงค์</td><td style="padding: 8px 0;">${booking.purpose}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #666;">📊 สถานะ</td><td style="padding: 8px 0;"><span style="background: #ff9800; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px;">รออนุมัติ</span></td></tr>
+                </table>
+            </div>
+            <p style="color: #666; font-size: 14px;">กรุณาเข้าสู่ระบบ Admin Dashboard เพื่ออนุมัติหรือปฏิเสธคำขอนี้</p>
+        </div>
+        <div style="background: #f5f5f5; padding: 16px 24px; text-align: center; font-size: 13px; color: #999;">
+            <p style="margin: 0;">📍 สำนักคอมพิวเตอร์ อาคารเรียนรวม ชั้น 3 | 📞 โทร 27419</p>
+            <p style="margin: 4px 0 0;">© 2567 มหาวิทยาลัยศรีนครินทรวิโรฒ</p>
+        </div>
+    </div>`;
+
+    try {
+        await transporter.sendMail({
+            from: `"ระบบจองห้องประชุม มศว" <${process.env.EMAIL_USER}>`,
+            to: ADMIN_EMAIL,
+            subject: `📬 คำขอจองใหม่ - ${booking.full_name} (${dateThai})`,
+            html: htmlContent
+        });
+        console.log(`Admin notification email sent to ${ADMIN_EMAIL}`);
+    } catch (err) {
+        console.error('Failed to send admin email:', err.message);
+    }
+}
+
+/**
+ * Send confirmation email to booker when booking is submitted
+ */
+async function sendBookerConfirmationEmail(booking) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.log('Email not configured, skipping booker confirmation');
+        return;
+    }
+
+    const dateThai = formatDateThaiServer(booking.booking_date);
+    const timeRange = `${booking.start_time} - ${booking.end_time} น.`;
+
+    const htmlContent = `
+    <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #8B1A1A, #6d1515); padding: 24px; text-align: center;">
+            <h2 style="color: white; margin: 0; font-size: 18px;">🏢 ระบบจองห้องประชุม</h2>
+            <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0; font-size: 14px;">สำนักคอมพิวเตอร์ มศว องครักษ์</p>
+        </div>
+        <div style="padding: 32px 24px;">
+            <p style="font-size: 16px; color: #333;">สวัสดี คุณ<strong>${booking.full_name}</strong></p>
+            <div style="text-align: center; margin: 24px 0;">
+                <span style="font-size: 48px;">📩</span>
+                <h3 style="color: #1565c0; margin: 8px 0;">ระบบได้รับคำขอจองของคุณแล้ว</h3>
+            </div>
+            <div style="background: #f9f9f9; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 8px 0; color: #666; width: 120px;">📅 วันที่</td><td style="padding: 8px 0; font-weight: 600;">${dateThai}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #666;">⏰ เวลา</td><td style="padding: 8px 0; font-weight: 600;">${timeRange}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #666;">📋 คณะ</td><td style="padding: 8px 0;">${booking.faculty}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #666;">📌 วัตถุประสงค์</td><td style="padding: 8px 0;">${booking.purpose}</td></tr>
+                    <tr><td style="padding: 8px 0; color: #666;">📊 สถานะ</td><td style="padding: 8px 0;"><span style="background: #ff9800; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px;">⏳ รออนุมัติ</span></td></tr>
+                </table>
+            </div>
+            <p style="color: #666; font-size: 14px;">คำขอจองของคุณอยู่ระหว่างรอการอนุมัติจากเจ้าหน้าที่ เมื่อมีการอนุมัติหรือปฏิเสธ ระบบจะแจ้งผลให้คุณทราบทางอีเมลอีกครั้ง</p>
+        </div>
+        <div style="background: #f5f5f5; padding: 16px 24px; text-align: center; font-size: 13px; color: #999;">
+            <p style="margin: 0;">📍 สำนักคอมพิวเตอร์ อาคารเรียนรวม ชั้น 3 | 📞 โทร 27419</p>
+            <p style="margin: 4px 0 0;">© 2567 มหาวิทยาลัยศรีนครินทรวิโรฒ</p>
+        </div>
+    </div>`;
+
+    try {
+        await transporter.sendMail({
+            from: `"ระบบจองห้องประชุม มศว" <${process.env.EMAIL_USER}>`,
+            to: booking.email,
+            subject: `📩 ได้รับคำขอจองห้องประชุมแล้ว - ระบบจองห้องประชุม มศว`,
+            html: htmlContent
+        });
+        console.log(`Booker confirmation email sent to ${booking.email}`);
+    } catch (err) {
+        console.error('Failed to send booker confirmation email:', err.message);
     }
 }
 
@@ -279,6 +387,10 @@ app.post('/api/bookings', async (req, res, next) => {
         
         const bookingResponse = newBooking.toObject();
         bookingResponse.id = bookingResponse._id; // Mapping for frontend
+
+        // Send email notifications (fire-and-forget, don't block response)
+        sendBookerConfirmationEmail(newBooking);
+        sendAdminNewBookingEmail(newBooking);
 
         // Return 201 with booking info
         res.status(201).json({

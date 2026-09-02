@@ -4,7 +4,7 @@ const Admin = {
   bookings: [],
   targetBookingId: null,
   targetBookingName: null,
-  lastPendingCount: 0,
+  lastPendingCount: -1,
   pollingInterval: null,
 
   // ============================================================
@@ -203,13 +203,11 @@ const Admin = {
         this.bookings = data.bookings;
         const pendingCount = data.pendingCount || 0;
 
-        // Notify if new pending bookings arrived
+        // Notify if new pending bookings arrived (skip initial load when lastPendingCount is -1)
         if (pendingCount > this.lastPendingCount && this.lastPendingCount >= 0) {
           const newCount = pendingCount - this.lastPendingCount;
-          if (this.lastPendingCount > 0) {
-            App.showToast(`📬 มีคำขอจองใหม่ ${newCount} รายการ!`, 'warning', 5000);
-            this.playNotificationSound();
-          }
+          App.showToast(`📬 มีคำขอจองใหม่ ${newCount} รายการ!`, 'warning', 5000);
+          this.playNotificationSound();
         }
         this.lastPendingCount = pendingCount;
 
