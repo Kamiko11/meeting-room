@@ -110,9 +110,10 @@ async function sendEmailNotification(booking, type) {
             </div>
             <p style="color: #666; font-size: 14px;">${extraMessage}</p>
         </div>
-        <div style="background: #f5f5f5; padding: 16px 24px; text-align: center; font-size: 13px; color: #999;">
-            <p style="margin: 0;">📍 สำนักคอมพิวเตอร์ อาคารเรียนรวม ชั้น 3 | 📞 โทร 27419</p>
-            <p style="margin: 4px 0 0;">© 2567 มหาวิทยาลัยศรีนครินทรวิโรฒ</p>
+        <div style="background: #f5f5f5; padding: 16px 24px; text-align: center; font-size: 13px; color: #666; line-height: 1.5;">
+            <p style="margin: 0; font-weight: bold; color: #333;">สำนักคอมพิวเตอร์ มศว องครักษ์ จ.นครนายก</p>
+            <p style="margin: 4px 0;">📍 ชั้น 3 อาคารเรียนรวม<br>63 หมู่ 7 ถนนรังสิต-นครนายก คลอง16 ตำบลองครักษ์ อำเภอองครักษ์ จังหวัดนครนายก 26120</p>
+            <p style="margin: 4px 0;">📞 ติดต่อสำนักงาน: โทรศัพท์ 0 2649 5000 ต่อ 27419<br>✉️ อีเมล: saraban_cc@g.swu.ac.th</p>
         </div>
     </div>`;
 
@@ -150,9 +151,10 @@ async function sendAdminNewBookingEmail(booking) {
             </div>
             <p style="color: #666; font-size: 14px;">กรุณาเข้าสู่ระบบ Admin Dashboard เพื่ออนุมัติหรือปฏิเสธคำขอนี้</p>
         </div>
-        <div style="background: #f5f5f5; padding: 16px 24px; text-align: center; font-size: 13px; color: #999;">
-            <p style="margin: 0;">📍 สำนักคอมพิวเตอร์ อาคารเรียนรวม ชั้น 3 | 📞 โทร 27419</p>
-            <p style="margin: 4px 0 0;">© 2567 มหาวิทยาลัยศรีนครินทรวิโรฒ</p>
+        <div style="background: #f5f5f5; padding: 16px 24px; text-align: center; font-size: 13px; color: #666; line-height: 1.5;">
+            <p style="margin: 0; font-weight: bold; color: #333;">สำนักคอมพิวเตอร์ มศว องครักษ์ จ.นครนายก</p>
+            <p style="margin: 4px 0;">📍 ชั้น 3 อาคารเรียนรวม<br>63 หมู่ 7 ถนนรังสิต-นครนายก คลอง16 ตำบลองครักษ์ อำเภอองครักษ์ จังหวัดนครนายก 26120</p>
+            <p style="margin: 4px 0;">📞 ติดต่อสำนักงาน: โทรศัพท์ 0 2649 5000 ต่อ 27419<br>✉️ อีเมล: saraban_cc@g.swu.ac.th</p>
         </div>
     </div>`;
 
@@ -189,9 +191,10 @@ async function sendBookerConfirmationEmail(booking) {
             </div>
             <p style="color: #666; font-size: 14px;">คำขอจองของคุณอยู่ระหว่างรอการอนุมัติจากเจ้าหน้าที่ เมื่อมีการอนุมัติหรือปฏิเสธ ระบบจะแจ้งผลให้คุณทราบทางอีเมลอีกครั้ง</p>
         </div>
-        <div style="background: #f5f5f5; padding: 16px 24px; text-align: center; font-size: 13px; color: #999;">
-            <p style="margin: 0;">📍 สำนักคอมพิวเตอร์ อาคารเรียนรวม ชั้น 3 | 📞 โทร 27419</p>
-            <p style="margin: 4px 0 0;">© 2567 มหาวิทยาลัยศรีนครินทรวิโรฒ</p>
+        <div style="background: #f5f5f5; padding: 16px 24px; text-align: center; font-size: 13px; color: #666; line-height: 1.5;">
+            <p style="margin: 0; font-weight: bold; color: #333;">สำนักคอมพิวเตอร์ มศว องครักษ์ จ.นครนายก</p>
+            <p style="margin: 4px 0;">📍 ชั้น 3 อาคารเรียนรวม<br>63 หมู่ 7 ถนนรังสิต-นครนายก คลอง16 ตำบลองครักษ์ อำเภอองครักษ์ จังหวัดนครนายก 26120</p>
+            <p style="margin: 4px 0;">📞 ติดต่อสำนักงาน: โทรศัพท์ 0 2649 5000 ต่อ 27419<br>✉️ อีเมล: saraban_cc@g.swu.ac.th</p>
         </div>
     </div>`;
 
