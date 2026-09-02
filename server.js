@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { Resend } = require('resend');
 const { connectDB, Booking } = require('./database');
 
 const app = express();
@@ -11,10 +10,37 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin1234';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
-// For testing on Resend without a verified domain, you MUST use onboarding@resend.dev as the from address
-const SENDER_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+// Google Apps Script Web App URL สำหรับส่งอีเมล
+const GAS_EMAIL_URL = 'https://script.google.com/macros/s/AKfycbzXhJMOiXvMGl9Lq4cdeX-8IfP1Llh1eRiVt4xM9B-6k1rzNKvkcDfil5NBIcOfxTwO/exec';
+
+/**
+ * ฟังก์ชันหลักสำหรับเรียก Google Apps Script API เพื่อส่งอีเมล
+ */
+async function sendEmail(to, subject, htmlContent) {
+    try {
+        const response = await fetch(GAS_EMAIL_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                to: to,
+                subject: subject,
+                html: htmlContent,
+                senderName: "ระบบจองห้องประชุม มศว"
+            })
+        });
+        
+        const result = await response.json();
+        if (!result.success) {
+            console.error('GAS Email Error:', result.error);
+        } else {
+            console.log(`[Email Success] ส่งอีเมลสำเร็จไปยัง: ${to}`);
+        }
+    } catch (err) {
+        console.error('Exception in sendEmail:', err.message);
+    }
+}
 
 /**
  * Format date string (YYYY-MM-DD) to Thai date format
@@ -30,12 +56,6 @@ function formatDateThaiServer(dateStr) {
  * Send email notification to student about booking status
  */
 async function sendEmailNotification(booking, type) {
-    // Skip if Resend API key is not set
-    if (!process.env.RESEND_API_KEY) {
-        console.log('Resend API key not configured, skipping notification');
-        return;
-    }
-
     const dateThai = formatDateThaiServer(booking.booking_date);
     const timeRange = `${booking.start_time} - ${booking.end_time} น.`;
 
@@ -96,32 +116,14 @@ async function sendEmailNotification(booking, type) {
         </div>
     </div>`;
 
-    try {
-        const { data, error } = await resend.emails.send({
-            from: `"ระบบจองห้องประชุม มศว" <${SENDER_EMAIL}>`,
-            to: booking.email,
-            subject: `${subject} - ระบบจองห้องประชุม มศว`,
-            html: htmlContent
-        });
-        
-        if (error) {
-            console.error('Failed to send status email via Resend:', error);
-        } else {
-            console.log(`Email sent to ${booking.email} (${type}), ID:`, data.id);
-        }
-    } catch (err) {
-        console.error('Exception sending status email:', err.message);
-    }
+    await sendEmail(booking.email, `${subject} - ระบบจองห้องประชุม มศว`, htmlContent);
 }
 
 /**
  * Send email to admin when a new booking is submitted
  */
 async function sendAdminNewBookingEmail(booking) {
-    if (!process.env.RESEND_API_KEY || !ADMIN_EMAIL) {
-        console.log('Resend API key or Admin email not configured, skipping admin notification');
-        return;
-    }
+    if (!ADMIN_EMAIL) return;
 
     const dateThai = formatDateThaiServer(booking.booking_date);
     const timeRange = `${booking.start_time} - ${booking.end_time} น.`;
@@ -154,33 +156,13 @@ async function sendAdminNewBookingEmail(booking) {
         </div>
     </div>`;
 
-    try {
-        const { data, error } = await resend.emails.send({
-            from: `"ระบบจองห้องประชุม มศว" <${SENDER_EMAIL}>`,
-            to: ADMIN_EMAIL,
-            subject: `📬 คำขอจองใหม่ - ${booking.full_name} (${dateThai})`,
-            html: htmlContent
-        });
-        
-        if (error) {
-            console.error('Failed to send admin email via Resend:', error);
-        } else {
-            console.log(`Admin notification email sent to ${ADMIN_EMAIL}, ID:`, data.id);
-        }
-    } catch (err) {
-        console.error('Exception sending admin email:', err.message);
-    }
+    await sendEmail(ADMIN_EMAIL, `📬 คำขอจองใหม่ - ${booking.full_name} (${dateThai})`, htmlContent);
 }
 
 /**
  * Send confirmation email to booker when booking is submitted
  */
 async function sendBookerConfirmationEmail(booking) {
-    if (!process.env.RESEND_API_KEY) {
-        console.log('Resend API key not configured, skipping booker confirmation');
-        return;
-    }
-
     const dateThai = formatDateThaiServer(booking.booking_date);
     const timeRange = `${booking.start_time} - ${booking.end_time} น.`;
 
@@ -213,22 +195,7 @@ async function sendBookerConfirmationEmail(booking) {
         </div>
     </div>`;
 
-    try {
-        const { data, error } = await resend.emails.send({
-            from: `"ระบบจองห้องประชุม มศว" <${SENDER_EMAIL}>`,
-            to: booking.email,
-            subject: `📩 ได้รับคำขอจองห้องประชุมแล้ว - ระบบจองห้องประชุม มศว`,
-            html: htmlContent
-        });
-        
-        if (error) {
-            console.error('Failed to send booker confirmation email via Resend:', error);
-        } else {
-            console.log(`Booker confirmation email sent to ${booking.email}, ID:`, data.id);
-        }
-    } catch (err) {
-        console.error('Exception sending booker confirmation email:', err.message);
-    }
+    await sendEmail(booking.email, `📩 ได้รับคำขอจองห้องประชุมแล้ว - ระบบจองห้องประชุม มศว`, htmlContent);
 }
 
 /**
