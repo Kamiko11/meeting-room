@@ -13,6 +13,8 @@ const connectDB = async () => {
 const bookingSchema = new mongoose.Schema({
     full_name: { type: String, required: true },
     faculty: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: true },
     booking_date: { type: String, required: true },
     start_time: { type: String, required: true },
     end_time: { type: String, required: true },

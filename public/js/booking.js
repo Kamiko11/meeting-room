@@ -34,14 +34,30 @@ const BookingModule = {
     const data = {
       fullName: document.getElementById('full-name').value.trim(),
       faculty: document.getElementById('faculty').value,
+      email: document.getElementById('email').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
       bookingDate: document.getElementById('booking-date').value,
       startTime: document.getElementById('start-time').value,
       endTime: document.getElementById('end-time').value,
       purpose: document.getElementById('purpose').value.trim()
     };
 
-    if (!data.fullName || !data.faculty || !data.bookingDate || !data.startTime || !data.endTime || !data.purpose) {
+    if (!data.fullName || !data.faculty || !data.email || !data.phone || !data.bookingDate || !data.startTime || !data.endTime || !data.purpose) {
       App.showToast('กรุณากรอกข้อมูลให้ครบทุกช่อง', 'warning');
+      return;
+    }
+
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      App.showToast('กรุณากรอกอีเมลให้ถูกต้อง', 'warning');
+      return;
+    }
+
+    // Validate phone
+    const phoneClean = data.phone.replace(/[-\s]/g, '');
+    if (!/^0\d{8,9}$/.test(phoneClean)) {
+      App.showToast('กรุณากรอกเบอร์โทรให้ถูกต้อง (เช่น 0812345678)', 'warning');
       return;
     }
 
@@ -99,6 +115,7 @@ const BookingModule = {
     document.getElementById('success-time').textContent = 
       App.formatTime(booking.start_time || booking.startTime) + ' - ' + App.formatTime(booking.end_time || booking.endTime);
     document.getElementById('success-purpose').textContent = booking.purpose;
+    document.getElementById('success-email').textContent = booking.email;
     
     App.openModal('success-modal');
   }

@@ -86,6 +86,17 @@
               </select>
             </div>
 
+            <div class="form-row">
+              <div class="form-group">
+                <label for="email">อีเมล <span class="required">*</span></label>
+                <input type="email" id="email" required placeholder="example@g.swu.ac.th">
+              </div>
+              <div class="form-group">
+                <label for="phone">เบอร์โทรศัพท์ <span class="required">*</span></label>
+                <input type="tel" id="phone" required placeholder="0812345678" maxlength="10" pattern="0[0-9]{8,9}">
+              </div>
+            </div>
+
             <div class="form-group">
               <label for="booking-date">วันที่จอง <span class="required">*</span></label>
               <input type="date" id="booking-date" required>
@@ -226,12 +237,14 @@
           <div class="detail-row"><span class="detail-label">วันที่:</span> <span id="success-date"></span></div>
           <div class="detail-row"><span class="detail-label">เวลา:</span> <span id="success-time"></span></div>
           <div class="detail-row"><span class="detail-label">วัตถุประสงค์:</span> <span id="success-purpose"></span></div>
+          <div class="detail-row"><span class="detail-label">อีเมล:</span> <span id="success-email"></span></div>
         </div>
         
         <div class="pending-notice">
           <div class="pending-icon">⏳</div>
           <p><strong>คำขอจองของคุณถูกส่งเรียบร้อยแล้ว</strong></p>
           <p>กรุณารอการอนุมัติจากเจ้าหน้าที่สำนักคอมพิวเตอร์</p>
+          <p class="contact-hint">📧 ผลการอนุมัติจะแจ้งเตือนทางอีเมลที่กรอกไว้</p>
           <p class="contact-hint">📞 สอบถามเพิ่มเติม โทร 27419</p>
         </div>
       </div>
