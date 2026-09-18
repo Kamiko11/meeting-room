@@ -223,6 +223,187 @@ app.use(express.json());
 app.use(express.static('public'));
 
 /**
+ * Email validation: allow @g.swu.ac.th and specific test email
+ */
+function isValidEmail(email) {
+    const swuRegex = /^[a-zA-Z0-9._%+\-]+@g\.swu\.ac\.th$/;
+    const testEmail = 'aom3222ad@gmail.com';
+    return swuRegex.test(email) || email.toLowerCase() === testEmail;
+}
+
+// ============================================================
+//  OTP STORE (in-memory, 5-minute expiry)
+// ============================================================
+const otpStore = new Map(); // key: email, value: { code, bookingId, expiresAt }
+
+function generateOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function cleanExpiredOTPs() {
+    const now = Date.now();
+    for (const [key, val] of otpStore) {
+        if (val.expiresAt < now) otpStore.delete(key);
+    }
+}
+
+// ============================================================
+//  SELF-SERVICE CANCELLATION API ROUTES
+// ============================================================
+
+/**
+ * POST /api/my-bookings
+ * Search bookings by email. Returns active bookings (pending/approved).
+ */
+app.post('/api/my-bookings', async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        if (!email || !isValidEmail(email)) {
+            return res.status(400).json({ success: false, message: 'กรุณากรอกอีเมลมหาวิทยาลัย (@g.swu.ac.th) ที่ถูกต้อง' });
+        }
+
+        const bookings = await Booking.find({
+            email: email.toLowerCase(),
+            status: { $in: ['pending', 'approved'] }
+        }).sort({ booking_date: 1, start_time: 1 }).lean();
+
+        const formatted = bookings.map(b => ({
+            id: b._id,
+            full_name: b.full_name,
+            faculty: b.faculty,
+            booking_date: b.booking_date,
+            start_time: b.start_time,
+            end_time: b.end_time,
+            purpose: b.purpose,
+            status: b.status
+        }));
+
+        res.json({ success: true, bookings: formatted });
+    } catch (err) {
+        next(err);
+    }
+});
+
+/**
+ * POST /api/request-cancel-otp
+ * Send OTP to the user's email for booking cancellation verification.
+ */
+app.post('/api/request-cancel-otp', async (req, res, next) => {
+    try {
+        const { email, bookingId } = req.body;
+        if (!email || !bookingId) {
+            return res.status(400).json({ success: false, message: 'ข้อมูลไม่ครบถ้วน' });
+        }
+
+        // Verify the booking exists and belongs to this email
+        const booking = await Booking.findOne({
+            _id: bookingId,
+            email: email.toLowerCase(),
+            status: { $in: ['pending', 'approved'] }
+        });
+
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'ไม่พบรายการจองนี้' });
+        }
+
+        // Rate limit: 1 OTP per email per 60 seconds
+        cleanExpiredOTPs();
+        const existing = otpStore.get(email.toLowerCase());
+        if (existing && (existing.expiresAt - Date.now()) > 4 * 60 * 1000) {
+            return res.status(429).json({ success: false, message: 'กรุณารอ 1 นาทีก่อนขอรหัส OTP ใหม่' });
+        }
+
+        const otp = generateOTP();
+        otpStore.set(email.toLowerCase(), {
+            code: otp,
+            bookingId: bookingId,
+            expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes
+        });
+
+        // Send OTP email
+        const dateThai = formatDateThaiServer(booking.booking_date);
+        const timeRange = `${booking.start_time} - ${booking.end_time} น.`;
+
+        const htmlContent = `
+        <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #e65100, #ff9800); padding: 24px; text-align: center;">
+                <h2 style="color: white; margin: 0; font-size: 18px;">🔐 รหัส OTP ยืนยันการยกเลิกจอง</h2>
+                <p style="color: rgba(255,255,255,0.9); margin: 4px 0 0; font-size: 14px;">ระบบจองห้องประชุม สำนักคอมพิวเตอร์ มศว องครักษ์</p>
+            </div>
+            <div style="padding: 32px 24px;">
+                <p style="font-size: 16px; color: #333;">สวัสดี คุณ<strong>${booking.full_name}</strong></p>
+                <p style="color: #666;">คุณได้ขอยกเลิกการจองห้องประชุม โปรดใช้รหัส OTP ด้านล่างเพื่อยืนยัน:</p>
+                <div style="text-align: center; margin: 24px 0;">
+                    <div style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #e65100; background: #fff3e0; border: 2px dashed #ff9800; padding: 16px 32px; border-radius: 12px; display: inline-block;">${otp}</div>
+                    <p style="color: #999; font-size: 13px; margin-top: 8px;">รหัสนี้จะหมดอายุใน 5 นาที</p>
+                </div>
+                <div style="background: #f9f9f9; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                    <p style="margin: 0 0 8px; font-weight: 600; color: #333;">📋 รายการจองที่ต้องการยกเลิก:</p>
+                    <p style="margin: 4px 0; color: #666;">📅 วันที่: <strong>${dateThai}</strong></p>
+                    <p style="margin: 4px 0; color: #666;">⏰ เวลา: <strong>${timeRange}</strong></p>
+                    <p style="margin: 4px 0; color: #666;">📌 วัตถุประสงค์: ${booking.purpose}</p>
+                </div>
+                <p style="color: #c62828; font-size: 13px;">⚠️ หากคุณไม่ได้ขอยกเลิกการจอง กรุณาเพิกเฉยอีเมลนี้</p>
+            </div>
+            <div style="background: #f5f5f5; padding: 16px 24px; text-align: center; font-size: 13px; color: #666;">
+                <p style="margin: 0;">สำนักคอมพิวเตอร์ มศว องครักษ์ | โทร 0 2649 5000 ต่อ 27419</p>
+            </div>
+        </div>`;
+
+        sendEmail(email, '🔐 รหัส OTP ยืนยันการยกเลิกจอง - ระบบจองห้องประชุม มศว', htmlContent);
+
+        res.json({ success: true, message: 'ส่งรหัส OTP ไปยังอีเมลของคุณแล้ว' });
+    } catch (err) {
+        next(err);
+    }
+});
+
+/**
+ * POST /api/cancel-with-otp
+ * Cancel a booking after verifying OTP.
+ */
+app.post('/api/cancel-with-otp', async (req, res, next) => {
+    try {
+        const { email, bookingId, otp } = req.body;
+        if (!email || !bookingId || !otp) {
+            return res.status(400).json({ success: false, message: 'ข้อมูลไม่ครบถ้วน' });
+        }
+
+        cleanExpiredOTPs();
+        const stored = otpStore.get(email.toLowerCase());
+
+        if (!stored) {
+            return res.status(400).json({ success: false, message: 'รหัส OTP หมดอายุหรือไม่ถูกต้อง กรุณาขอรหัสใหม่' });
+        }
+
+        if (stored.code !== otp || stored.bookingId !== bookingId) {
+            return res.status(400).json({ success: false, message: 'รหัส OTP ไม่ถูกต้อง' });
+        }
+
+        // OTP is valid, cancel the booking
+        const booking = await Booking.findOneAndUpdate(
+            { _id: bookingId, email: email.toLowerCase(), status: { $in: ['pending', 'approved'] } },
+            { status: 'cancelled', cancelled_at: new Date(), admin_note: 'ยกเลิกโดยนิสิตเอง' },
+            { new: true }
+        );
+
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'ไม่พบรายการจองนี้ หรือถูกยกเลิกไปแล้ว' });
+        }
+
+        // Delete used OTP
+        otpStore.delete(email.toLowerCase());
+
+        // Send cancellation notification email
+        sendEmailNotification(booking, 'cancelled');
+
+        res.json({ success: true, message: 'ยกเลิกการจองเรียบร้อยแล้ว' });
+    } catch (err) {
+        next(err);
+    }
+});
+
+/**
  * GET /api/bookings
  * Returns all active bookings for calendar display
  */
@@ -292,9 +473,8 @@ app.post('/api/bookings', async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'กรุณากรอกข้อมูลให้ครบทุกช่อง' });
         }
 
-        // Validate email format - only @g.swu.ac.th allowed
-        const emailRegex = /^[a-zA-Z0-9._%+\-]+@g\.swu\.ac\.th$/;
-        if (!emailRegex.test(email)) {
+        // Validate email format - only @g.swu.ac.th or test email allowed
+        if (!isValidEmail(email)) {
             return res.status(400).json({ success: false, message: 'กรุณาใช้อีเมลมหาวิทยาลัย (@g.swu.ac.th) เท่านั้น' });
         }
 
@@ -349,7 +529,7 @@ app.post('/api/bookings', async (req, res, next) => {
         const newBooking = new Booking({
             full_name: fullName,
             faculty: faculty,
-            email: email,
+            email: email.toLowerCase(),
             phone: phoneClean,
             booking_date: bookingDate,
             start_time: startTime,

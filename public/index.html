@@ -89,7 +89,7 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="email">อีเมล <span class="required">*</span></label>
-                <input type="email" id="email" required placeholder="example@g.swu.ac.th" pattern="^[a-zA-Z0-9._%+\-]+@g\.swu\.ac\.th$" title="กรุณาใช้อีเมลมหาวิทยาลัย (@g.swu.ac.th) เท่านั้น">
+                <input type="email" id="email" required placeholder="example@g.swu.ac.th" title="กรุณาใช้อีเมลมหาวิทยาลัย (@g.swu.ac.th)">
               </div>
               <div class="form-group">
                 <label for="phone">เบอร์โทรศัพท์ <span class="required">*</span></label>
@@ -178,9 +178,50 @@
         </div>
       </section>
     </div>
+
+    <!-- Cancel Booking Section -->
+    <div class="cancel-section">
+      <div class="card">
+        <div class="section-header">
+          <h2>🔍 ค้นหา / ยกเลิกการจอง</h2>
+          <p class="info-text">กรอกอีเมลที่ใช้จองเพื่อค้นหาและยกเลิกการจองของคุณ</p>
+        </div>
+        <div class="cancel-search-box">
+          <div class="cancel-search-row">
+            <input type="email" id="cancel-email" placeholder="กรอกอีเมลมหาวิทยาลัย เช่น example@g.swu.ac.th">
+            <button class="btn btn-primary" id="btn-search-bookings" onclick="CancelModule.searchBookings()">🔍 ค้นหา</button>
+          </div>
+        </div>
+        <div id="cancel-results"></div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Modals -->
+  
+  <!-- OTP Verification Modal -->
+  <div id="otp-modal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="App.closeModal('otp-modal')">&times;</button>
+      <div class="modal-header">
+        <h3>🔐 ยืนยันการยกเลิกด้วยรหัส OTP</h3>
+      </div>
+      <div class="modal-body">
+        <p class="otp-instruction">ระบบได้ส่งรหัส OTP 6 หลักไปยังอีเมลของคุณแล้ว<br>กรุณากรอกรหัสเพื่อยืนยันการยกเลิก</p>
+        <div class="otp-target-info" id="otp-target-info"></div>
+        <div class="form-group">
+          <label for="otp-input">รหัส OTP</label>
+          <input type="text" id="otp-input" maxlength="6" placeholder="กรอกรหัส 6 หลัก" style="text-align:center; font-size:1.5rem; letter-spacing:6px; font-weight:700;">
+        </div>
+        <p class="otp-timer" id="otp-timer">⏳ รหัสจะหมดอายุใน <span id="otp-countdown">5:00</span> นาที</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="App.closeModal('otp-modal')">ยกเลิก</button>
+        <button class="btn btn-danger" id="btn-confirm-otp" onclick="CancelModule.confirmOTP()">🔐 ยืนยันยกเลิกการจอง</button>
+      </div>
+    </div>
+  </div>
   
   <!-- 1. Detail Modal -->
   <div id="detail-modal" class="modal">
@@ -264,5 +305,6 @@
   <script src="js/app.js" defer></script>
   <script src="js/calendar.js" defer></script>
   <script src="js/booking.js" defer></script>
+  <script src="js/cancel.js" defer></script>
 </body>
 </html>

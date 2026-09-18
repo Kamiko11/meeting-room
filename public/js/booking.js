@@ -47,9 +47,10 @@ const BookingModule = {
       return;
     }
 
-    // Validate email - only @g.swu.ac.th allowed
+    // Validate email - only @g.swu.ac.th or test email allowed
     const emailRegex = /^[a-zA-Z0-9._%+\-]+@g\.swu\.ac\.th$/;
-    if (!emailRegex.test(data.email)) {
+    const isTestEmail = data.email.toLowerCase() === 'aom3222ad@gmail.com';
+    if (!emailRegex.test(data.email) && !isTestEmail) {
       App.showToast('กรุณาใช้อีเมลมหาวิทยาลัย (@g.swu.ac.th) เท่านั้น', 'warning');
       return;
     }

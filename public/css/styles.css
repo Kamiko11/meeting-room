@@ -271,6 +271,177 @@ input:invalid {
   to { transform: rotate(360deg); }
 }
 
+/* =============================================
+   Self-Service Cancel Section
+   ============================================= */
+.cancel-section {
+  margin-top: var(--space-xl);
+}
+
+.cancel-search-box {
+  margin-bottom: var(--space-md);
+}
+
+.cancel-search-row {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.cancel-search-row input {
+  flex: 1;
+}
+
+.cancel-search-row button {
+  white-space: nowrap;
+  padding: 12px 24px;
+}
+
+.cancel-loading,
+.cancel-empty {
+  text-align: center;
+  padding: var(--space-lg);
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+.cancel-results-header {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-accent);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.cancel-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.cancel-booking-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all var(--transition);
+  gap: var(--space-md);
+}
+
+.cancel-booking-card:hover {
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.cancel-booking-info {
+  flex: 1;
+}
+
+.cancel-booking-date {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-accent);
+}
+
+.cancel-booking-time {
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-top: 2px;
+}
+
+.cancel-booking-purpose {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.cancel-booking-meta {
+  margin-top: 6px;
+  font-size: 0.85rem;
+}
+
+.cancel-status {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.cancel-status-pending {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.cancel-status-approved {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.btn-cancel-booking {
+  white-space: nowrap;
+  padding: 8px 16px !important;
+  font-size: 0.85rem !important;
+}
+
+/* OTP Modal */
+.otp-instruction {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: var(--space-md);
+}
+
+.otp-target-info {
+  background: var(--color-bg);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  margin-bottom: var(--space-md);
+  border: 1px solid var(--color-border);
+}
+
+.otp-target-info p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+}
+
+.otp-timer {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  margin-top: var(--space-sm);
+}
+
+.otp-timer span {
+  font-weight: 700;
+  color: #e65100;
+}
+
+@media (max-width: 768px) {
+  .cancel-search-row {
+    flex-direction: column;
+  }
+  .cancel-search-row button {
+    width: 100%;
+  }
+  .cancel-booking-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cancel-booking-action {
+    margin-top: var(--space-sm);
+  }
+  .btn-cancel-booking {
+    width: 100%;
+  }
+}
+
 /* FullCalendar Customization */
 :root {
   --fc-event-bg-color: var(--color-primary);
