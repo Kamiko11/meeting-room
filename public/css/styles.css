@@ -394,7 +394,7 @@ input:invalid {
 .modal-footer {
   margin-top: var(--space-lg);
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
 }
 
 .modal-actions {
