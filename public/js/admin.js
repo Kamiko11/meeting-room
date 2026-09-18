@@ -602,6 +602,206 @@ const Admin = {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+  },
+
+  // ============================================================
+  //  TAB SWITCHING
+  // ============================================================
+  switchTab(tabId) {
+    // Update tab buttons
+    document.querySelectorAll('.admin-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tabId);
+    });
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.toggle('active', content.id === tabId);
+    });
+    // Auto-load report when switching to report tab
+    if (tabId === 'report-tab' && !this.reportData) {
+      this.loadReport();
+    }
+  },
+
+  // ============================================================
+  //  REPORT
+  // ============================================================
+  reportData: null,
+
+  async loadReport() {
+    const container = document.getElementById('report-content');
+    container.innerHTML = '<div class="report-empty">⏳ กำลังโหลดข้อมูล...</div>';
+
+    try {
+      const res = await fetch('/api/admin/report', {
+        headers: { 'Authorization': `Bearer ${this.password}` }
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        App.showToast('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', 'error');
+        this.logout();
+        return;
+      }
+
+      const data = await res.json();
+      if (data.success) {
+        this.reportData = data.report;
+        this.renderReport();
+        App.showToast('โหลดข้อมูลรีพอร์ตสำเร็จ', 'success');
+      }
+    } catch (err) {
+      container.innerHTML = '<div class="report-empty">❌ ไม่สามารถโหลดข้อมูลได้</div>';
+      App.showToast('ไม่สามารถโหลดข้อมูลรีพอร์ตได้', 'error');
+    }
+  },
+
+  renderReport() {
+    const container = document.getElementById('report-content');
+
+    if (!this.reportData || this.reportData.length === 0) {
+      container.innerHTML = '<div class="report-empty">ไม่พบข้อมูลการจอง</div>';
+      return;
+    }
+
+    const statusText = (status) => {
+      switch (status) {
+        case 'pending': return '⏳ รออนุมัติ';
+        case 'approved': return '✅ อนุมัติ';
+        case 'rejected': return '❌ ปฏิเสธ';
+        case 'cancelled': return '🚫 ยกเลิก';
+        default: return status;
+      }
+    };
+
+    let html = '';
+
+    this.reportData.forEach(monthData => {
+      const monthLabel = this.formatMonthThai(monthData.month);
+
+      html += `
+        <div class="report-month-section">
+          <div class="report-month-header">
+            <div class="report-month-title">📅 ${monthLabel}</div>
+            <div class="report-month-stats">
+              <span>ทั้งหมด: ${monthData.total}</span>
+              <span>✅ ${monthData.approved}</span>
+              <span>⏳ ${monthData.pending}</span>
+              <span>❌ ${monthData.rejected}</span>
+              <span>🚫 ${monthData.cancelled}</span>
+            </div>
+          </div>
+          <div class="report-table-wrapper">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th class="col-no">#</th>
+                  <th>ชื่อผู้จอง</th>
+                  <th>คณะ</th>
+                  <th>อีเมล</th>
+                  <th>เบอร์โทร</th>
+                  <th>วันที่จอง</th>
+                  <th>เวลา</th>
+                  <th>วัตถุประสงค์</th>
+                  <th>สถานะ</th>
+                  <th>วันที่สร้าง</th>
+                </tr>
+              </thead>
+              <tbody>`;
+
+      monthData.bookings.forEach((b, i) => {
+        const dateThai = App.formatDateThai(b.booking_date);
+        const timeRange = App.formatTime(b.start_time) + ' - ' + App.formatTime(b.end_time);
+        const createdDate = b.created_at ? new Date(b.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+
+        html += `
+                <tr>
+                  <td class="col-no">${i + 1}</td>
+                  <td>${this.escapeHtml(b.full_name)}</td>
+                  <td>${this.escapeHtml(b.faculty)}</td>
+                  <td>${this.escapeHtml(b.email || '-')}</td>
+                  <td>${this.escapeHtml(b.phone || '-')}</td>
+                  <td>${dateThai}</td>
+                  <td>${timeRange}</td>
+                  <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${this.escapeHtml(b.purpose)}">${this.escapeHtml(b.purpose)}</td>
+                  <td>${statusText(b.status)}</td>
+                  <td>${createdDate}</td>
+                </tr>`;
+      });
+
+      html += `
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+  },
+
+  formatMonthThai(monthStr) {
+    // monthStr = "YYYY-MM"
+    const months = [
+      'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    ];
+    const [year, month] = monthStr.split('-');
+    const monthIndex = parseInt(month, 10) - 1;
+    const thaiYear = parseInt(year, 10) + 543;
+    return `${months[monthIndex] || month} ${thaiYear}`;
+  },
+
+  exportCSV() {
+    if (!this.reportData || this.reportData.length === 0) {
+      App.showToast('ไม่มีข้อมูลให้ส่งออก กรุณาโหลดข้อมูลก่อน', 'warning');
+      return;
+    }
+
+    // BOM for UTF-8
+    let csv = '\uFEFF';
+    csv += 'เดือน,ชื่อผู้จอง,คณะ,อีเมล,เบอร์โทร,วันที่จอง,เวลาเริ่ม,เวลาสิ้นสุด,วัตถุประสงค์,สถานะ,วันที่สร้าง\n';
+
+    const statusLabel = (s) => {
+      switch (s) {
+        case 'pending': return 'รออนุมัติ';
+        case 'approved': return 'อนุมัติ';
+        case 'rejected': return 'ปฏิเสธ';
+        case 'cancelled': return 'ยกเลิก';
+        default: return s;
+      }
+    };
+
+    const csvEscape = (str) => {
+      if (!str) return '';
+      return '"' + str.replace(/"/g, '""') + '"';
+    };
+
+    this.reportData.forEach(monthData => {
+      const monthLabel = this.formatMonthThai(monthData.month);
+      monthData.bookings.forEach(b => {
+        const createdDate = b.created_at ? new Date(b.created_at).toLocaleString('th-TH') : '';
+        csv += [
+          csvEscape(monthLabel),
+          csvEscape(b.full_name),
+          csvEscape(b.faculty),
+          csvEscape(b.email),
+          csvEscape(b.phone),
+          csvEscape(b.booking_date),
+          csvEscape(b.start_time),
+          csvEscape(b.end_time),
+          csvEscape(b.purpose),
+          csvEscape(statusLabel(b.status)),
+          csvEscape(createdDate)
+        ].join(',') + '\n';
+      });
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `report-booking-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    App.showToast('ส่งออก CSV สำเร็จ', 'success');
   }
 };
 

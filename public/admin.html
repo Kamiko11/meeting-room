@@ -56,6 +56,15 @@
   <!-- Dashboard Screen (hidden until login) -->
   <main class="app-main" id="dashboard-screen" style="display:none;">
 
+    <!-- Tab Navigation -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="dashboard-tab" onclick="Admin.switchTab('dashboard-tab')">📋 จัดการการจอง</button>
+      <button class="admin-tab" data-tab="report-tab" onclick="Admin.switchTab('report-tab')">📊 รีพอร์ต</button>
+    </div>
+
+    <!-- Tab: Dashboard -->
+    <div id="dashboard-tab" class="tab-content active">
+
     <!-- Stats Bar -->
     <div class="stats-bar">
       <div class="stat-card stat-pending">
@@ -116,6 +125,28 @@
         </table>
       </div>
     </div>
+
+    </div><!-- end dashboard-tab -->
+
+    <!-- Tab: Report -->
+    <div id="report-tab" class="tab-content">
+
+      <!-- Report Controls -->
+      <div class="report-controls">
+        <h2>📊 รีพอร์ตข้อมูลการจองรายเดือน</h2>
+        <div class="report-actions">
+          <button class="btn btn-refresh" id="btn-load-report" onclick="Admin.loadReport()">🔄 โหลดข้อมูล</button>
+          <button class="btn btn-export" id="btn-export-csv" onclick="Admin.exportCSV()">📥 ส่งออก CSV</button>
+        </div>
+      </div>
+
+      <!-- Report Content -->
+      <div id="report-content">
+        <div class="report-empty">กดปุ่ม "โหลดข้อมูล" เพื่อดูรีพอร์ต</div>
+      </div>
+
+    </div><!-- end report-tab -->
+
   </main>
 
   <!-- Modal: View Details -->

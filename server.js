@@ -417,6 +417,42 @@ app.get('/api/admin/bookings', requireAdmin, async (req, res, next) => {
 });
 
 /**
+ * GET /api/admin/report
+ * Returns all bookings grouped by month for the report page.
+ */
+app.get('/api/admin/report', requireAdmin, async (req, res, next) => {
+    try {
+        const bookings = await Booking.find()
+            .sort({ booking_date: -1, start_time: -1 })
+            .lean();
+
+        // Group by month (YYYY-MM from booking_date)
+        const grouped = {};
+        bookings.forEach(b => {
+            const month = b.booking_date ? b.booking_date.substring(0, 7) : 'unknown';
+            if (!grouped[month]) grouped[month] = [];
+            grouped[month].push({ ...b, id: b._id });
+        });
+
+        // Convert to sorted array
+        const months = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+        const report = months.map(month => ({
+            month,
+            bookings: grouped[month],
+            total: grouped[month].length,
+            approved: grouped[month].filter(b => b.status === 'approved').length,
+            pending: grouped[month].filter(b => b.status === 'pending').length,
+            rejected: grouped[month].filter(b => b.status === 'rejected').length,
+            cancelled: grouped[month].filter(b => b.status === 'cancelled').length
+        }));
+
+        res.json({ success: true, report });
+    } catch (err) {
+        next(err);
+    }
+});
+
+/**
  * POST /api/admin/bookings/:id/approve
  * Approve a pending booking
  */
