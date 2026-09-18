@@ -42,6 +42,16 @@
         <div class="card">
           <div id="calendar"></div>
         </div>
+        
+        <div class="contact-box" style="margin-top: var(--space-xl);">
+          <h3>📞 ช่องทางติดต่อสำนักคอมพิวเตอร์</h3>
+          <ul style="line-height: 1.6;">
+            <li><span class="contact-icon">📍</span> ชั้น 3 อาคารเรียนรวม<br>63 หมู่ 7 ถนนรังสิต-นครนายก คลอง16 ตำบลองครักษ์ อำเภอองครักษ์ จังหวัดนครนายก 26120</li>
+            <li><span class="contact-icon">📞</span> ติดต่อสำนักงาน: โทรศัพท์ 0 2649 5000 ต่อ 27419</li>
+            <li><span class="contact-icon">✉️</span> saraban_cc@g.swu.ac.th</li>
+            <li><span class="contact-icon">🕐</span> เวลาทำการ: วันจันทร์ - อาทิตย์ เวลา 8:30 - 18:30 น.</li>
+          </ul>
+        </div>
       </section>
 
       <!-- Right Column: Booking Form -->
@@ -58,30 +68,23 @@
             </div>
 
             <div class="form-group">
-              <label for="faculty">คณะ <span class="required">*</span></label>
+              <label for="faculty">คณะ / หน่วยงาน <span class="required">*</span></label>
               <select id="faculty" required>
-                <option value="" disabled selected>-- เลือกคณะ --</option>
+                <option value="">-- เลือกคณะ --</option>
+                <option value="คณะวิศวกรรมศาสตร์">คณะวิศวกรรมศาสตร์</option>
+                <option value="คณะแพทยศาสตร์">คณะแพทยศาสตร์</option>
+                <option value="คณะพยาบาลศาสตร์">คณะพยาบาลศาสตร์</option>
+                <option value="คณะเภสัชศาสตร์">คณะเภสัชศาสตร์</option>
+                <option value="คณะทันตแพทยศาสตร์">คณะทันตแพทยศาสตร์</option>
+                <option value="คณะกายภาพบำบัด">คณะกายภาพบำบัด</option>
+                <option value="คณะวิทยาศาสตร์">คณะวิทยาศาสตร์</option>
+                <option value="คณะพลศึกษา">คณะพลศึกษา</option>
                 <option value="คณะศึกษาศาสตร์">คณะศึกษาศาสตร์</option>
                 <option value="คณะมนุษยศาสตร์">คณะมนุษยศาสตร์</option>
-                <option value="คณะวิทยาศาสตร์">คณะวิทยาศาสตร์</option>
-                <option value="คณะสังคมศาสตร์">คณะสังคมศาสตร์</option>
-                <option value="คณะพลศึกษา">คณะพลศึกษา</option>
-                <option value="คณะแพทยศาสตร์">คณะแพทยศาสตร์</option>
-                <option value="คณะทันตแพทยศาสตร์">คณะทันตแพทยศาสตร์</option>
-                <option value="คณะเภสัชศาสตร์">คณะเภสัชศาสตร์</option>
-                <option value="คณะพยาบาลศาสตร์">คณะพยาบาลศาสตร์</option>
-                <option value="คณะวิศวกรรมศาสตร์">คณะวิศวกรรมศาสตร์</option>
                 <option value="คณะศิลปกรรมศาสตร์">คณะศิลปกรรมศาสตร์</option>
-                <option value="คณะเทคโนโลยีและนวัตกรรมผลิตภัณฑ์การเกษตร">คณะเทคโนโลยีและนวัตกรรมผลิตภัณฑ์การเกษตร</option>
-                <option value="คณะกายภาพบำบัด">คณะกายภาพบำบัด</option>
-                <option value="คณะเศรษฐศาสตร์">คณะเศรษฐศาสตร์</option>
-                <option value="คณะบริหารธุรกิจเพื่อสังคม">คณะบริหารธุรกิจเพื่อสังคม</option>
+                <option value="คณะสังคมศาสตร์">คณะสังคมศาสตร์</option>
                 <option value="วิทยาลัยนวัตกรรมสื่อสารสังคม">วิทยาลัยนวัตกรรมสื่อสารสังคม</option>
-                <option value="วิทยาลัยโพธิวิชชาลัย">วิทยาลัยโพธิวิชชาลัย</option>
                 <option value="วิทยาลัยอุตสาหกรรมสร้างสรรค์">วิทยาลัยอุตสาหกรรมสร้างสรรค์</option>
-                <option value="วิทยาลัยนานาชาติเพื่อศึกษาความยั่งยืน">วิทยาลัยนานาชาติเพื่อศึกษาความยั่งยืน</option>
-                <option value="คณะวัฒนธรรมสิ่งแวดล้อมและท่องเที่ยวเชิงนิเวศ">คณะวัฒนธรรมสิ่งแวดล้อมและท่องเที่ยวเชิงนิเวศ</option>
-                <option value="บัณฑิตวิทยาลัย">บัณฑิตวิทยาลัย</option>
                 <option value="อื่นๆ">อื่นๆ</option>
               </select>
             </div>
@@ -93,7 +96,7 @@
               </div>
               <div class="form-group">
                 <label for="phone">เบอร์โทรศัพท์ <span class="required">*</span></label>
-                <input type="tel" id="phone" required placeholder="0812345678" maxlength="10" pattern="0[0-9]{8,9}">
+                <input type="tel" id="phone" required placeholder="0812345678" pattern="[0-9]{9,10}" title="กรุณากรอกเบอร์โทรศัพท์ 9-10 หลัก">
               </div>
             </div>
 
@@ -106,7 +109,7 @@
               <div class="form-group">
                 <label for="start-time">เวลาเริ่มต้น <span class="required">*</span></label>
                 <select id="start-time" required>
-                  <option value="" disabled selected>-- เลือกเวลา --</option>
+                  <option value="">-- เลือกเวลา --</option>
                   <option value="08:30">08:30 น.</option>
                   <option value="09:00">09:00 น.</option>
                   <option value="09:30">09:30 น.</option>
@@ -132,7 +135,7 @@
               <div class="form-group">
                 <label for="end-time">เวลาสิ้นสุด <span class="required">*</span></label>
                 <select id="end-time" required>
-                  <option value="" disabled selected>-- เลือกเวลา --</option>
+                  <option value="">-- เลือกเวลา --</option>
                   <option value="09:00">09:00 น.</option>
                   <option value="09:30">09:30 น.</option>
                   <option value="10:00">10:00 น.</option>
