@@ -47,10 +47,10 @@ const BookingModule = {
       return;
     }
 
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Validate email - only @g.swu.ac.th allowed
+    const emailRegex = /^[a-zA-Z0-9._%+\-]+@g\.swu\.ac\.th$/;
     if (!emailRegex.test(data.email)) {
-      App.showToast('กรุณากรอกอีเมลให้ถูกต้อง', 'warning');
+      App.showToast('กรุณาใช้อีเมลมหาวิทยาลัย (@g.swu.ac.th) เท่านั้น', 'warning');
       return;
     }
 

@@ -292,10 +292,10 @@ app.post('/api/bookings', async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'กรุณากรอกข้อมูลให้ครบทุกช่อง' });
         }
 
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        // Validate email format - only @g.swu.ac.th allowed
+        const emailRegex = /^[a-zA-Z0-9._%+\-]+@g\.swu\.ac\.th$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).json({ success: false, message: 'รูปแบบอีเมลไม่ถูกต้อง' });
+            return res.status(400).json({ success: false, message: 'กรุณาใช้อีเมลมหาวิทยาลัย (@g.swu.ac.th) เท่านั้น' });
         }
 
         // Validate phone format (Thai phone: 10 digits starting with 0)
