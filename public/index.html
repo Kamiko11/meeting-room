@@ -170,38 +170,28 @@
             </button>
           </form>
         </div>
-        <div class="contact-box">
-          <h3>📞 ช่องทางติดต่อสำนักคอมพิวเตอร์</h3>
-          <ul style="line-height: 1.6;">
-            <li><span class="contact-icon">📍</span> ชั้น 3 อาคารเรียนรวม<br>63 หมู่ 7 ถนนรังสิต-นครนายก คลอง16 ตำบลองครักษ์ อำเภอองครักษ์ จังหวัดนครนายก 26120</li>
-            <li><span class="contact-icon">📞</span> ติดต่อสำนักงาน: โทรศัพท์ 0 2649 5000 ต่อ 27419</li>
-            <li><span class="contact-icon">✉️</span> saraban_cc@g.swu.ac.th</li>
-            <li><span class="contact-icon">🕐</span> เวลาทำการ: วันจันทร์ - อาทิตย์ เวลา 8:30 - 18:30 น.</li>
-          </ul>
-        </div>
-      </section>
-    </div>
-
-    <!-- Cancel Booking Section -->
-    <div class="cancel-section">
-      <div class="card">
-        <div class="section-header">
-          <h2>🔍 ค้นหา / ยกเลิกการจอง</h2>
-          <p class="info-text">กรอกอีเมลที่ใช้จองเพื่อค้นหาและยกเลิกการจองของคุณ</p>
-        </div>
-        <div class="cancel-search-box">
-          <div class="cancel-search-row">
-            <div class="input-with-icon">
-              <span class="input-icon">📧</span>
-              <input type="email" id="cancel-email" placeholder="กรอกอีเมลมหาวิทยาลัย เช่น example@g.swu.ac.th">
+        <!-- Cancel Booking Section -->
+        <div class="cancel-section">
+          <div class="card">
+            <div class="section-header">
+              <h2>🔍 ค้นหา / ยกเลิกการจอง</h2>
+              <p class="info-text">กรอกอีเมลที่ใช้จองเพื่อค้นหาและยกเลิกการจองของคุณ</p>
             </div>
-            <button class="btn btn-primary" id="btn-search-bookings" onclick="CancelModule.searchBookings()">🔍 ค้นหา</button>
+            <div class="cancel-search-box">
+              <div class="cancel-search-row">
+                <div class="input-with-icon">
+                  <span class="input-icon">📧</span>
+                  <input type="email" id="cancel-email" placeholder="กรอกอีเมลมหาวิทยาลัย เช่น example@g.swu.ac.th">
+                </div>
+                <button class="btn btn-primary" id="btn-search-bookings" onclick="CancelModule.searchBookings()">🔍 ค้นหา</button>
+              </div>
+            </div>
+            <div id="cancel-results"></div>
           </div>
         </div>
-        <div id="cancel-results"></div>
-      </div>
-    </div>
 
+      </section>
+    </div>
   </main>
 
   <!-- Modals -->
