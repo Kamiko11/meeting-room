@@ -37,10 +37,26 @@ const CalendarModule = {
         this.showBookingDetail(info.event);
       },
       
+      // Custom event content - show full time range
+      eventContent: (arg) => {
+        const start = arg.event.start;
+        const end = arg.event.end;
+        const formatTime = (d) => d ? d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+        const timeText = formatTime(start) + ' - ' + formatTime(end);
+        
+        const container = document.createElement('div');
+        container.style.cssText = 'overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:2px 4px;width:100%;';
+        container.innerHTML = `<span style="font-weight:600;">${timeText}</span> ${arg.event.title}`;
+        return { domNodes: [container] };
+      },
+
       // Custom event rendering
       eventDidMount: (info) => {
         info.el.style.cursor = 'pointer';
-        info.el.title = info.event.title;
+        const start = info.event.start;
+        const end = info.event.end;
+        const formatTime = (d) => d ? d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+        info.el.title = formatTime(start) + ' - ' + formatTime(end) + ' ' + info.event.title;
       },
       
       height: 'auto',
