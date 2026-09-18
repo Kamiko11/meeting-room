@@ -45,8 +45,8 @@ const CalendarModule = {
         const timeText = formatTime(start) + ' - ' + formatTime(end);
         
         const container = document.createElement('div');
-        container.style.cssText = 'overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:2px 4px;width:100%;';
-        container.innerHTML = `<span style="font-weight:600;">${timeText}</span> ${arg.event.title}`;
+        container.style.cssText = 'padding:2px 4px;width:100%;line-height:1.3;';
+        container.innerHTML = `<div style="font-weight:700;font-size:0.8rem;">⏰ ${timeText}</div><div style="font-size:0.75rem;opacity:0.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${arg.event.title}</div>`;
         return { domNodes: [container] };
       },
 

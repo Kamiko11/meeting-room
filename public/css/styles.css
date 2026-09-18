@@ -298,6 +298,8 @@ input:invalid {
   font-size: 0.85rem;
   box-shadow: var(--shadow-sm);
   transition: transform 0.1s;
+  white-space: normal !important;
+  overflow: visible !important;
 }
 
 .fc-event:hover {
